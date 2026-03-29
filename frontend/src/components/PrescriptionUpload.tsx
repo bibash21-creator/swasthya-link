@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Upload, X, CheckCircle2, Loader2, FileText } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { toast } from "sonner";
 
 export default function PrescriptionUpload({ coords }: { coords: { lat: number, lon: number } | null }) {
   const [file, setFile] = useState<File | null>(null);
@@ -70,7 +71,7 @@ export default function PrescriptionUpload({ coords }: { coords: { lat: number, 
     if (!file && !medicineNames.trim() && selectedServices.length === 0) return;
     const token = localStorage.getItem("token");
     if (!token) {
-      alert("Please login first to send requests.");
+      toast.error("Please login first to send requests.");
       return;
     }
     
@@ -121,7 +122,7 @@ export default function PrescriptionUpload({ coords }: { coords: { lat: number, 
       ]);
     } catch (error) {
       console.error("Error uploading prescription:", error);
-      alert("Failed to upload. Please check your connection.");
+      toast.error("Failed to upload. Please check your connection.");
     } finally {
       setIsUploading(false);
     }

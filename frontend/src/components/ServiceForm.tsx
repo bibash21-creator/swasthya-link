@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Send, Loader2, CheckCircle2, MapPin, Pill, Activity } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { toast } from "sonner";
 
 export default function ServiceForm({ coords }: { coords: { lat: number, lon: number } | null }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -18,7 +19,7 @@ export default function ServiceForm({ coords }: { coords: { lat: number, lon: nu
     e.preventDefault();
     if (!formData.medicine) return;
     if (!coords) {
-       alert("Please allow location access to match with nearby pharmacies.");
+       toast.error("Please allow location access to match with nearby pharmacies.");
        return;
     }
     setIsSubmitting(true);
@@ -37,9 +38,15 @@ export default function ServiceForm({ coords }: { coords: { lat: number, lon: nu
         longitude: coords?.lon
       };
 
-      const response = await fetch("http://127.0.0.1:8001/api/prescriptions/?patient_id=1", {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000/api";
+      const token = localStorage.getItem("token");
+      
+      const response = await fetch(`${apiUrl}/prescriptions/`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": token ? `Bearer ${token}` : ""
+        },
         body: JSON.stringify(payload)
       });
 
@@ -48,11 +55,11 @@ export default function ServiceForm({ coords }: { coords: { lat: number, lon: nu
       } else {
         const errorData = await response.text();
         console.error("Submission failed:", errorData);
-        alert(`Broadcast failed: ${response.statusText}. Please check the terminal logs.`);
+        toast.error(`Broadcast failed: ${response.statusText}`);
       }
     } catch (error) {
        console.error("Error submitting service request:", error);
-       alert("Network error. Please ensure the backend is running on port 8001.");
+       toast.error("Network error. Please check your connection.");
     } finally {
       setIsSubmitting(false);
     }

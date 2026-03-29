@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { FileText, Send, CheckCircle2, Loader2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { toast } from "sonner";
 
 export default function HealthInfoForm() {
   const [isSubmitted, setIsSubmitted] = useState(false);
@@ -17,11 +18,16 @@ export default function HealthInfoForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
+    const token = localStorage.getItem("token");
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
 
     try {
-      const response = await fetch("http://localhost:8001/api/prescriptions/?patient_id=1", {
+      const response = await fetch(`${apiUrl}/prescriptions/`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": token ? `Bearer ${token}` : ""
+        },
         body: JSON.stringify({
           info_json: formData,
           image_url: null
@@ -33,7 +39,7 @@ export default function HealthInfoForm() {
       setIsSubmitted(true);
     } catch (error) {
       console.error("Error submitting manual list:", error);
-      alert("Failed to submit. Please try again later.");
+      toast.error("Failed to submit. Please try again later.");
     } finally {
       setIsSubmitting(false);
     }

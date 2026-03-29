@@ -3,6 +3,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Mail, Lock, User, Pill, ArrowRight, Loader2, Store, UserCircle, ShieldCheck, MapPin, Phone } from "lucide-react";
 import { useState } from "react";
+import { toast } from "sonner";
 
 export default function AuthModal({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) {
   const [tab, setTab] = useState<'login' | 'signup'>('login');
@@ -19,7 +20,7 @@ export default function AuthModal({ isOpen, onClose }: { isOpen: boolean, onClos
     if ("geolocation" in navigator) {
       navigator.geolocation.getCurrentPosition((pos) => {
         setCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
-        alert("Precision Location Acquired.");
+        toast.success("Precision Location Acquired.");
       });
     }
   };
@@ -40,7 +41,7 @@ export default function AuthModal({ isOpen, onClose }: { isOpen: boolean, onClos
       onClose();
       window.location.href = data.role === 'admin' ? '/dashboard/admin' : `/dashboard/${data.role}`;
     } catch (err: any) {
-      alert(err.message);
+      toast.error(err.message);
     } finally {
       setLoading(false);
     }
@@ -105,13 +106,13 @@ export default function AuthModal({ isOpen, onClose }: { isOpen: boolean, onClos
           const err = await response.json();
           throw new Error(err.detail || 'Registration failed');
         }
-
-        alert("Registration initiated. Verification identity required. Please login to verify.");
+        
+        toast.info("Registration initiated. Verification identity required. Please login to verify.");
         setTab('login');
       }
     } catch (error: any) {
       console.error(error);
-      alert(error.message || "Authentication Failed.");
+      toast.error(error.message || "Authentication Failed.");
     } finally {
       setLoading(false);
     }

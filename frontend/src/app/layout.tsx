@@ -4,6 +4,7 @@ import "./globals.css";
 import Navbar from "@/components/Navbar";
 import { CartProvider } from "@/context/CartContext";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import { Toaster } from "sonner";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -46,6 +47,7 @@ export default function RootLayout({
           <CartProvider>
             <Navbar />
             <main className="relative">{children}</main>
+            <Toaster position="top-center" richColors />
           </CartProvider>
         </ThemeProvider>
       </body>

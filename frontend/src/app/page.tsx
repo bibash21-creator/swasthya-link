@@ -20,17 +20,11 @@ const PrescriptionUpload = dynamic(() => import("@/components/PrescriptionUpload
 
 // API configuration
 const getApiUrl = () => {
-  if (typeof window !== 'undefined') {
-    return process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
-  }
-  return "http://localhost:8000/api";
+  return process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
 };
 
 const getUploadUrl = () => {
-  if (typeof window !== 'undefined') {
-    return process.env.NEXT_PUBLIC_UPLOAD_URL || "http://localhost:8000";
-  }
-  return "http://localhost:8000";
+  return process.env.NEXT_PUBLIC_UPLOAD_URL || "http://localhost:8000";
 };
 
 const fadeInUp = {

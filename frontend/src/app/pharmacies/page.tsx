@@ -4,6 +4,7 @@ import { useState, useMemo, useCallback, memo, useEffect } from "react";
 import dynamic from "next/dynamic";
 import { Search, MapPin, Navigation, Phone, Clock, ChevronRight, Shield, Star, Send } from "lucide-react";
 import { motion } from "framer-motion";
+import { toast } from "sonner";
 
 const PharmacyMap = dynamic(() => import("@/components/PharmacyMap"), {
   ssr: false,
@@ -58,7 +59,7 @@ export default function PharmaciesPage() {
     if (!selectedPharmacy || !comment.trim()) return;
     const token = localStorage.getItem("token");
     if (!token) {
-      alert("Please login as a patient to post reviews.");
+      toast.error("Please login as a patient to post reviews.");
       return;
     }
 
@@ -82,10 +83,10 @@ export default function PharmaciesPage() {
       
       setComment("");
       setRating(5);
-      alert("Thank you! Your review has been posted.");
+      toast.success("Thank you! Your review has been posted.");
     } catch (error) {
       console.error("Error posting review:", error);
-      alert("Failed to post review. Please try again.");
+      toast.error("Failed to post review. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
