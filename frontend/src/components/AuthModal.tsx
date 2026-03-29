@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, Mail, Lock, User, Pill, ArrowRight, Loader2, Store, UserCircle, ShieldCheck, MapPin, Phone } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
-import { getBaseUrl } from "@/lib/api";
+import { getBaseUrl, joinUrl } from "@/lib/api";
 
 export default function AuthModal({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) {
   const [tab, setTab] = useState<'login' | 'signup'>('login');
@@ -32,7 +32,7 @@ export default function AuthModal({ isOpen, onClose }: { isOpen: boolean, onClos
     setLoading(true);
     try {
       const apiUrl = getBaseUrl();
-      const response = await fetch(`${apiUrl}/auth/verify-otp?email=${email}&code=${otp}`, {
+      const response = await fetch(joinUrl(apiUrl, `auth/verify-otp?email=${email}&code=${otp}`), {
         method: 'POST'
       });
       if (!response.ok) throw new Error("Invalid verification code");
@@ -62,7 +62,7 @@ export default function AuthModal({ isOpen, onClose }: { isOpen: boolean, onClos
         formData.append('username', email);
         formData.append('password', password);
 
-        const response = await fetch(`${apiUrl}/auth/login`, {
+        const response = await fetch(joinUrl(apiUrl, "auth/login"), {
           method: 'POST',
           headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
           body: formData.toString(),
@@ -85,7 +85,7 @@ export default function AuthModal({ isOpen, onClose }: { isOpen: boolean, onClos
         onClose();
         window.location.href = data.role === 'admin' ? '/dashboard/admin' : `/dashboard/${data.role}`;
       } else {
-        const regUrl = role === 'patient' ? `${apiUrl}/patients/register` : `${apiUrl}/pharmacies/register`;
+        const regUrl = role === 'patient' ? joinUrl(apiUrl, "patients/register") : joinUrl(apiUrl, "pharmacies/register");
         const payload = {
           email,
           password,

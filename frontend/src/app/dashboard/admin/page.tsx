@@ -8,7 +8,7 @@ import {
   UserCircle, ArrowRight, Loader2
 } from "lucide-react";
 import { useState, useEffect } from "react";
-import MedLogo from "@/components/MedLogo";
+import { getBaseUrl, joinUrl } from "@/lib/api";
 
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState<'users' | 'system' | 'logs'>('users');
@@ -22,19 +22,19 @@ export default function AdminDashboard() {
     if (!token) return;
 
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000/api";
+      const apiUrl = getBaseUrl();
       
       // Fetch Audit Logs
-      const logRes = await fetch(`${apiUrl}/admin/audit-logs`, { 
+      const logRes = await fetch(joinUrl(apiUrl, "admin/audit-logs"), { 
         headers: { "Authorization": `Bearer ${token}` } 
       });
       if (logRes.ok) setAuditLogs(await logRes.json());
 
       // Fetch Stats & Users
       const [pRes, phRes, rRes] = await Promise.all([
-        fetch(`${apiUrl}/patients/all`, { headers: { "Authorization": `Bearer ${token}` } }),
-        fetch(`${apiUrl}/pharmacies/all`, { headers: { "Authorization": `Bearer ${token}` } }),
-        fetch(`${apiUrl}/prescriptions/all`, { headers: { "Authorization": `Bearer ${token}` } })
+        fetch(joinUrl(apiUrl, "patients/all"), { headers: { "Authorization": `Bearer ${token}` } }),
+        fetch(joinUrl(apiUrl, "pharmacies/all"), { headers: { "Authorization": `Bearer ${token}` } }),
+        fetch(joinUrl(apiUrl, "prescriptions/all"), { headers: { "Authorization": `Bearer ${token}` } })
       ]);
 
       if (pRes.ok && phRes.ok && rRes.ok) {

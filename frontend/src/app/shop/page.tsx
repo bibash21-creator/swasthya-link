@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Search, Package, ShoppingBag, Filter, X, MapPin, Star, Shield, ChevronDown, Check } from "lucide-react";
 import Link from "next/link";
 import { useCart } from "@/context/CartContext";
-import { getBaseUrl, getUploadUrl } from "@/lib/api";
+import { getBaseUrl, getUploadUrl, joinUrl } from "@/lib/api";
 
 export default function ShopPage() {
   const [products, setProducts] = useState<any[]>([]);
@@ -26,7 +26,7 @@ export default function ShopPage() {
       const params = new URLSearchParams();
       if (search) params.set("search", search);
       if (filter !== "all") params.set("type", filter);
-      const res = await fetch(`${apiUrl}/pharmacies/shop?${params.toString()}`);
+      const res = await fetch(joinUrl(apiUrl, `pharmacies/shop?${params.toString()}`));
       if (res.ok) setProducts(await res.json());
     } catch (e) {
       console.error("Failed to fetch shop products", e);

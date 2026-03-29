@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Send, Loader2, CheckCircle2, MapPin, Pill, Activity } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
-import { getBaseUrl } from "@/lib/api";
+import { getBaseUrl, joinUrl } from "@/lib/api";
 
 export default function ServiceForm({ coords }: { coords: { lat: number, lon: number } | null }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -42,7 +42,7 @@ export default function ServiceForm({ coords }: { coords: { lat: number, lon: nu
       const apiUrl = getBaseUrl();
       const token = localStorage.getItem("token");
       
-      const response = await fetch(`${apiUrl}/prescriptions/`, {
+      const response = await fetch(joinUrl(apiUrl, "prescriptions/"), {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",

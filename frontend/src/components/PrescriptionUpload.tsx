@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Upload, X, CheckCircle2, Loader2, FileText } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
-import { getBaseUrl } from "@/lib/api";
+import { getBaseUrl, joinUrl } from "@/lib/api";
 
 export default function PrescriptionUpload({ coords }: { coords: { lat: number, lon: number } | null }) {
   const [file, setFile] = useState<File | null>(null);
@@ -106,7 +106,7 @@ export default function PrescriptionUpload({ coords }: { coords: { lat: number, 
       }
       
       const apiUrl = getBaseUrl();
-      const response = await fetch(`${apiUrl}/prescriptions/`, {
+      const response = await fetch(joinUrl(apiUrl, "prescriptions/"), {
         method: "POST",
         headers: { 
           "Authorization": `Bearer ${token}`

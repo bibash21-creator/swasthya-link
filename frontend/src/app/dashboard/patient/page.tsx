@@ -10,7 +10,7 @@ import PrescriptionUpload from "@/components/PrescriptionUpload";
 import ServiceForm from "@/components/ServiceForm";
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { getBaseUrl } from "@/lib/api";
+import { getBaseUrl, joinUrl } from "@/lib/api";
 
 export default function PatientDashboard() {
   const [activeTab, setActiveTab] = useState<'track' | 'upload' | 'service' | 'orders'>('track');
@@ -30,7 +30,7 @@ export default function PatientDashboard() {
       const patientId = payload.id;
 
       const apiUrl = getBaseUrl();
-      const response = await fetch(`${apiUrl}/prescriptions/patient/${patientId}`, {
+      const response = await fetch(joinUrl(apiUrl, `prescriptions/patient/${patientId}`), {
         headers: { "Authorization": `Bearer ${token}` }
       });
 
@@ -38,7 +38,7 @@ export default function PatientDashboard() {
         const data = await response.json();
         const withMatches = await Promise.all(data.map(async (p: any) => {
           if (p.status === 'verified') {
-            const mRes = await fetch(`${apiUrl}/prescriptions/${p.id}/matches`, {
+            const mRes = await fetch(joinUrl(apiUrl, `prescriptions/${p.id}/matches`), {
               headers: { "Authorization": `Bearer ${token}` }
             });
             if (mRes.ok) {
@@ -60,7 +60,7 @@ export default function PatientDashboard() {
     if (!token) return;
     try {
       const apiUrl = getBaseUrl();
-      const response = await fetch(`${apiUrl}/orders/my-orders`, {
+      const response = await fetch(joinUrl(apiUrl, "orders/my-orders"), {
         headers: { "Authorization": `Bearer ${token}` }
       });
       if (response.ok) setOrders(await response.json());

@@ -4,7 +4,7 @@ import { useState } from "react";
 import { FileText, Send, CheckCircle2, Loader2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
-import { getBaseUrl } from "@/lib/api";
+import { getBaseUrl, joinUrl } from "@/lib/api";
 
 export default function HealthInfoForm() {
   const [isSubmitted, setIsSubmitted] = useState(false);
@@ -23,7 +23,7 @@ export default function HealthInfoForm() {
     const apiUrl = getBaseUrl();
 
     try {
-      const response = await fetch(`${apiUrl}/prescriptions/`, {
+      const response = await fetch(joinUrl(apiUrl, "prescriptions/"), {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",

@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ShoppingBag, X, Plus, Minus, CreditCard, Truck, CheckCircle2, ArrowRight, Wallet, Package } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { getBaseUrl } from "@/lib/api";
+import { getBaseUrl, joinUrl } from "@/lib/api";
 import { toast } from "sonner";
 
 export default function CheckoutPage() {
@@ -36,7 +36,7 @@ export default function CheckoutPage() {
         }))
       };
 
-      const res = await fetch(`${apiUrl}/orders/`, {
+      const res = await fetch(joinUrl(apiUrl, "orders/"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

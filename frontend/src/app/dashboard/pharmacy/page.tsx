@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import MedLogo from "@/components/MedLogo";
-import { getBaseUrl, getUploadUrl } from "@/lib/api";
+import { getBaseUrl, getUploadUrl, joinUrl } from "@/lib/api";
 
 export default function PharmacyDashboard() {
   const [activeTab, setActiveTab] = useState<'requests' | 'inventory'>('requests');
@@ -36,7 +36,7 @@ export default function PharmacyDashboard() {
     const token = getToken();
     if (!token) return;
     try {
-      const response = await fetch(`${apiUrl}/prescriptions/all`, {
+      const response = await fetch(joinUrl(apiUrl, "prescriptions/all"), {
         headers: { "Authorization": `Bearer ${token}` }
       });
       if (response.ok) setRequests(await response.json());
@@ -47,7 +47,7 @@ export default function PharmacyDashboard() {
     const token = getToken();
     if (!token) return;
     try {
-      const response = await fetch(`${apiUrl}/orders/pharmacy-orders`, {
+      const response = await fetch(joinUrl(apiUrl, "orders/pharmacy-orders"), {
         headers: { "Authorization": `Bearer ${token}` }
       });
       if (response.ok) setOrders(await response.json());
@@ -61,7 +61,7 @@ export default function PharmacyDashboard() {
     if (!token) return;
     try {
       const phId = getPharmacyId();
-      const response = await fetch(`${apiUrl}/pharmacies/${phId}/inventory`, {
+      const response = await fetch(joinUrl(apiUrl, `pharmacies/${phId}/inventory`), {
         headers: { "Authorization": `Bearer ${token}` }
       });
       if (response.ok) setInventory(await response.json());
@@ -73,7 +73,7 @@ export default function PharmacyDashboard() {
     const token = getToken();
     if (!token) return;
     try {
-      const endpoint = isOrder ? `${apiUrl}/orders/${id}/status?status=${status}` : `${apiUrl}/prescriptions/${id}/status?status=${status}`;
+      const endpoint = isOrder ? joinUrl(apiUrl, `orders/${id}/status?status=${status}`) : joinUrl(apiUrl, `prescriptions/${id}/status?status=${status}`);
       const response = await fetch(endpoint, {
         method: 'PATCH',
         headers: { "Authorization": `Bearer ${token}` }
@@ -91,7 +91,7 @@ export default function PharmacyDashboard() {
     setIsSaving(true);
     try {
       const phId = getPharmacyId();
-      const response = await fetch(`${apiUrl}/pharmacies/${phId}/inventory`, {
+      const response = await fetch(joinUrl(apiUrl, `pharmacies/${phId}/inventory`), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify(inventory)
@@ -109,7 +109,7 @@ export default function PharmacyDashboard() {
       const phId = getPharmacyId();
       const fd = new FormData();
       fd.append("file", file);
-      const res = await fetch(`${apiUrl}/pharmacies/${phId}/inventory/upload-image`, {
+      const res = await fetch(joinUrl(apiUrl, `pharmacies/${phId}/inventory/upload-image`), {
         method: "POST",
         headers: { "Authorization": `Bearer ${token}` },
         body: fd
