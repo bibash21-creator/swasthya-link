@@ -1,6 +1,9 @@
 import requests
+import sys
+import os
 
-BASE_URL = "http://127.0.0.1:8000/api/pharmacies"
+# Environment variables for configuration
+BASE_URL = os.getenv("API_URL", "http://127.0.0.1:8000/api/pharmacies")
 
 MOCK_PHARMACIES = [
     { "name": "City Care Pharmacy", "latitude": 27.7172, "longitude": 85.3240, "address": "Durbar Marg, Kathmandu", "contact_number": "01-4412345" },
@@ -11,16 +14,16 @@ MOCK_PHARMACIES = [
 ]
 
 def seed():
-    print("Starting database seeding...")
+    print(f"Starting database seeding toward {BASE_URL}...")
     for pharmacy in MOCK_PHARMACIES:
         try:
             response = requests.post(BASE_URL, json=pharmacy)
-            if response.status_code == 200:
-                print(f"Added: {pharmacy['name']}")
+            if response.status_code == 200 or response.status_code == 201:
+                print(f"✅ Added: {pharmacy['name']}")
             else:
-                print(f"Failed to add {pharmacy['name']}: {response.text}")
+                print(f"❌ Failed to add {pharmacy['name']}: {response.status_code} - {response.text}")
         except Exception as e:
-            print(f"Error connecting to server: {e}")
+            print(f"🔥 Error connecting to server: {e}")
             break
 
 if __name__ == "__main__":
