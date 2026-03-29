@@ -2,9 +2,9 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import { 
-  ArrowRight, Clock, MapPin, 
+  ArrowRight, Clock, MapPin, Search,
   User, Store, CheckCircle, Smartphone, Camera, 
-  Shield, Star, Package, ShoppingBag
+  Shield, Star, Package, ShoppingBag, ChevronLeft, ChevronRight
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import Link from "next/link";
@@ -335,6 +335,64 @@ export default function Home() {
         </div>
       </motion.section>
 
+      {/* App Experience Section */}
+      <section className="py-40 bg-background relative overflow-hidden">
+        <div className="max-w-7xl mx-auto px-6">
+           <div className="grid lg:grid-cols-2 gap-20 items-center">
+              
+              {/* Android Mockup Column with Slider */}
+              <div className="relative group perspective-1000 order-2 lg:order-1">
+                 <AppMockupSlider />
+                 
+                 {/* Background Glows */}
+                 <div className="absolute -top-20 -left-20 w-80 h-80 bg-primary/20 rounded-full blur-[100px] -z-10 group-hover:bg-primary/30 transition-colors" />
+                 <div className="absolute -bottom-20 -right-20 w-80 h-80 bg-violet-500/10 rounded-full blur-[100px] -z-10" />
+              </div>
+
+              {/* Description Column */}
+              <div className="space-y-12 order-1 lg:order-2">
+                 <div>
+                    <span className="text-[10px] font-mono text-primary uppercase tracking-[0.4em] font-black block mb-4">Inside the Ecosystem</span>
+                    <h2 className="text-5xl md:text-7xl font-black italic uppercase tracking-tighter leading-[0.9] mb-8">
+                       Designed for <br />
+                       <span className="text-primary italic">Absolute Ease.</span>
+                    </h2>
+                    <p className="text-xl text-muted-foreground font-medium max-w-lg leading-relaxed">
+                       Witness how MedConnect transforms your medical journey. Every pixel is optimized for speed, clarity, and trust.
+                    </p>
+                 </div>
+
+                 <div className="grid gap-8">
+                    <div className="flex gap-6 group">
+                       <div className="w-12 h-12 rounded-2xl bg-secondary flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-all duration-300"><Smartphone size={24} /></div>
+                       <div>
+                          <h4 className="text-lg font-black uppercase tracking-tighter italic mb-1">Native Speed</h4>
+                          <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-mono">Zero lag experience for critical emergency lookups.</p>
+                       </div>
+                    </div>
+                    <div className="flex gap-6 group">
+                       <div className="w-12 h-12 rounded-2xl bg-secondary flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-all duration-300"><Shield size={24} /></div>
+                       <div>
+                          <h4 className="text-lg font-black uppercase tracking-tighter italic mb-1">DDA Verified</h4>
+                          <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-mono">Fully compliant with Nepal Department of Drug Administration.</p>
+                       </div>
+                    </div>
+                 </div>
+
+                 <div className="pt-8 border-t border-border flex flex-wrap gap-4">
+                    <div className="flex items-center gap-3 px-6 py-4 bg-secondary/50 rounded-3xl border border-border">
+                       <div className="space-y-0.5">
+                          <p className="text-[8px] font-mono uppercase tracking-[0.2em] opacity-60">Status</p>
+                          <p className="text-sm font-black uppercase tracking-widest italic">Production Ready</p>
+                       </div>
+                    </div>
+                 </div>
+              </div>
+
+           </div>
+        </div>
+      </section>
+
       {/* Support Cards */}
       <motion.section 
         {...fadeInUp}
@@ -598,3 +656,88 @@ const Rotating3DMedicalIcon = () => (
       ))}
    </motion.div>
 );
+
+function AppMockupSlider() {
+  const [index, setIndex] = useState(0);
+  const features = [
+    {
+      title: "Smart Scan",
+      desc: "Instant prescription reading using AI-powered OCR. No more manual entry errors.",
+      image: "/mockup.png", 
+      badge: "Vision Engine"
+    },
+    {
+      title: "Stock Radar",
+      desc: "Pinpoint accuracy for medicine availability across Kathmandu sectors.",
+      image: "/mockup.png",
+      badge: "Real-time Sync"
+    },
+    {
+      title: "Secure ID",
+      desc: "Bio-verified identity tokens for safe medicine pickup and authorization.",
+      image: "/mockup.png",
+      badge: "Blockchain-ready"
+    }
+  ];
+
+  const next = () => setIndex((i) => (i + 1) % features.length);
+  const prev = () => setIndex((i) => (i - 1 + features.length) % features.length);
+
+  return (
+    <div className="relative z-10">
+       <div className="p-4 bg-[#111] rounded-[3.5rem] border-[12px] border-[#222] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.5)] overflow-hidden">
+          <div className="relative aspect-[9/19.5] rounded-[2.5rem] overflow-hidden bg-black">
+             <AnimatePresence mode="wait">
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, scale: 1.1 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  transition={{ duration: 0.5 }}
+                  className="absolute inset-0"
+                >
+                   <img 
+                     src={features[index].image} 
+                     alt="MedConnect Screen" 
+                     className="w-full h-full object-cover opacity-60"
+                   />
+                </motion.div>
+             </AnimatePresence>
+
+             {/* Content Inside Mockup */}
+             <div className="absolute inset-x-6 bottom-16 space-y-4">
+                <motion.div 
+                  key={`content-${index}`}
+                  initial={{ y: 20, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  className="bg-white/10 backdrop-blur-xl p-6 rounded-3xl border border-white/20 shadow-2xl"
+                >
+                   <div className="flex items-center gap-3 mb-3">
+                      <div className="p-2 bg-primary rounded-xl text-primary-foreground"><Smartphone size={16} /></div>
+                      <span className="text-[10px] font-black uppercase tracking-widest text-primary">{features[index].badge}</span>
+                   </div>
+                   <h4 className="text-xl font-black text-white italic leading-tight uppercase">{features[index].title}</h4>
+                   <p className="text-[10px] text-white/60 mt-2 font-mono uppercase tracking-widest">{features[index].desc}</p>
+                </motion.div>
+             </div>
+
+             {/* Controls Inside phone */}
+             <div className="absolute inset-x-0 bottom-4 flex justify-center gap-6">
+                <button onClick={prev} className="p-3 rounded-full bg-white/5 border border-white/10 text-white hover:bg-primary transition-all active:scale-95"><ChevronLeft size={20} /></button>
+                <button onClick={next} className="p-3 rounded-full bg-white/5 border border-white/10 text-white hover:bg-primary transition-all active:scale-95"><ChevronRight size={20} /></button>
+             </div>
+          </div>
+
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-8 bg-[#222] rounded-b-3xl z-20 flex items-center justify-center">
+             <div className="w-2 h-2 rounded-full bg-[#111]" />
+             <div className="w-12 h-1 bg-[#111] ml-4 rounded-full" />
+          </div>
+       </div>
+
+       {/* Floating Navigation Labels */}
+       <div className="absolute -left-12 top-1/2 -translate-y-1/2 flex flex-col gap-4">
+          <p className="text-[9px] font-mono uppercase tracking-[0.5em] -rotate-90 origin-left text-white/20">Scroll Experience</p>
+       </div>
+    </div>
+  );
+}
