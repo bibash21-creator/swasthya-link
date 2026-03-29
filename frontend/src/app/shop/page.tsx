@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Search, Package, ShoppingBag, Filter, X, MapPin, Star, Shield, ChevronDown, Check } from "lucide-react";
 import Link from "next/link";
 import { useCart } from "@/context/CartContext";
+import { getBaseUrl, getUploadUrl } from "@/lib/api";
 
 export default function ShopPage() {
   const [products, setProducts] = useState<any[]>([]);
@@ -16,8 +17,8 @@ export default function ShopPage() {
 
   const { addToCart, totalItems, totalPrice } = useCart();
 
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
-  const uploadUrl = process.env.NEXT_PUBLIC_UPLOAD_URL || "http://localhost:8000";
+  const apiUrl = getBaseUrl();
+  const uploadUrl = getUploadUrl();
 
   const fetchProducts = useCallback(async () => {
     setIsLoading(true);

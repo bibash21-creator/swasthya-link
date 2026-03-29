@@ -18,7 +18,7 @@ services:
       - key: DEBUG
         value: "false"
       - key: ALLOWED_ORIGINS
-        value: "https://your-vercel-app.vercel.app,https://www.yourdomain.com"
+        value: "https://swasthyalink-teal.vercel.app,http://localhost:3000,http://127.0.0.1:3000"
     disk:
       name: uploads
       mountPath: /app/uploads

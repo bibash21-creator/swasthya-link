@@ -4,6 +4,7 @@ import { useState } from "react";
 import { FileText, Send, CheckCircle2, Loader2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
+import { getBaseUrl } from "@/lib/api";
 
 export default function HealthInfoForm() {
   const [isSubmitted, setIsSubmitted] = useState(false);
@@ -19,7 +20,7 @@ export default function HealthInfoForm() {
     e.preventDefault();
     setIsSubmitting(true);
     const token = localStorage.getItem("token");
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
+    const apiUrl = getBaseUrl();
 
     try {
       const response = await fetch(`${apiUrl}/prescriptions/`, {

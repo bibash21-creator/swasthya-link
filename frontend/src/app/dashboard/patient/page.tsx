@@ -10,6 +10,7 @@ import PrescriptionUpload from "@/components/PrescriptionUpload";
 import ServiceForm from "@/components/ServiceForm";
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { getBaseUrl } from "@/lib/api";
 
 export default function PatientDashboard() {
   const [activeTab, setActiveTab] = useState<'track' | 'upload' | 'service' | 'orders'>('track');
@@ -28,7 +29,7 @@ export default function PatientDashboard() {
       const payload = JSON.parse(window.atob(base64));
       const patientId = payload.id;
 
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
+      const apiUrl = getBaseUrl();
       const response = await fetch(`${apiUrl}/prescriptions/patient/${patientId}`, {
         headers: { "Authorization": `Bearer ${token}` }
       });
@@ -58,7 +59,7 @@ export default function PatientDashboard() {
     const token = localStorage.getItem("token");
     if (!token) return;
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
+      const apiUrl = getBaseUrl();
       const response = await fetch(`${apiUrl}/orders/my-orders`, {
         headers: { "Authorization": `Bearer ${token}` }
       });

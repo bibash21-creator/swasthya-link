@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, Mail, Lock, User, Pill, ArrowRight, Loader2, Store, UserCircle, ShieldCheck, MapPin, Phone } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { getBaseUrl } from "@/lib/api";
 
 export default function AuthModal({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) {
   const [tab, setTab] = useState<'login' | 'signup'>('login');
@@ -28,8 +29,9 @@ export default function AuthModal({ isOpen, onClose }: { isOpen: boolean, onClos
   const handleVerifyOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setLoading(true);
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
+      const apiUrl = getBaseUrl();
       const response = await fetch(`${apiUrl}/auth/verify-otp?email=${email}&code=${otp}`, {
         method: 'POST'
       });
@@ -54,8 +56,7 @@ export default function AuthModal({ isOpen, onClose }: { isOpen: boolean, onClos
     setLoading(true);
 
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
-      
+      const apiUrl = getBaseUrl();
       if (tab === 'login') {
         const formData = new URLSearchParams();
         formData.append('username', email);

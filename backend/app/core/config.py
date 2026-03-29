@@ -32,7 +32,7 @@ class Settings(BaseSettings):
     DB_POOL_RECYCLE: int = 1800
     
     # CORS - comma-separated list of allowed origins
-    ALLOWED_ORIGINS: str = "http://localhost:3000,http://127.0.0.1:3000,https://*.vercel.app"
+    ALLOWED_ORIGINS: str = "http://localhost:3000,http://127.0.0.1:3000,https://swasthyalink-teal.vercel.app,https://swasthyalink-teal.vercel.app/,https://*.vercel.app"
     
     # Admin User
     ADMIN_EMAIL: str = Field(default="", description="Default admin email")

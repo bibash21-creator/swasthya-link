@@ -6,6 +6,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ShoppingBag, X, Plus, Minus, CreditCard, Truck, CheckCircle2, ArrowRight, Wallet, Package } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { getBaseUrl } from "@/lib/api";
+import { toast } from "sonner";
 
 export default function CheckoutPage() {
   const { cart, removeFromCart, clearCart, totalPrice, totalItems, addToCart } = useCart();
@@ -14,12 +16,12 @@ export default function CheckoutPage() {
   const [paymentMethod, setPaymentMethod] = useState<"cod" | "esewa" | "khalti" | "stripe">("cod");
   
   const router = useRouter();
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
+  const apiUrl = getBaseUrl();
 
   const handlePlaceOrder = async () => {
     const token = localStorage.getItem("token");
     if (!token) {
-      alert("Please login as a patient to place an order.");
+      toast.error("Please login as a patient to place an order.");
       return;
     }
 
@@ -59,11 +61,11 @@ export default function CheckoutPage() {
         clearCart();
       } else {
         const err = await res.json();
-        alert(err.detail || "Failed to place order");
+        toast.error(err.detail || "Failed to place order");
       }
     } catch (e) {
       console.error(e);
-      alert("An error occurred");
+      toast.error("An error occurred");
     } finally {
       setIsSubmitting(false);
     }

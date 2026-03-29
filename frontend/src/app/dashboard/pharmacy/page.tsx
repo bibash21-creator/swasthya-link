@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import MedLogo from "@/components/MedLogo";
+import { getBaseUrl, getUploadUrl } from "@/lib/api";
 
 export default function PharmacyDashboard() {
   const [activeTab, setActiveTab] = useState<'requests' | 'inventory'>('requests');
@@ -16,13 +17,12 @@ export default function PharmacyDashboard() {
   const [inventory, setInventory] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const apiUrl = getBaseUrl();
+  const uploadUrl = getUploadUrl();
 
   // Inventory Form State
   const [newItem, setNewItem] = useState({ medicine_name: "", description: "", type: "medicine", quantity: 0, price: 0, image_url: "" });
   const [isUploadingImage, setIsUploadingImage] = useState(false);
-
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
-  const uploadUrl = process.env.NEXT_PUBLIC_UPLOAD_URL || "http://localhost:8000";
 
   const getToken = () => localStorage.getItem("token");
   const getPharmacyId = () => {

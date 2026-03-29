@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Upload, X, CheckCircle2, Loader2, FileText } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
+import { getBaseUrl } from "@/lib/api";
 
 export default function PrescriptionUpload({ coords }: { coords: { lat: number, lon: number } | null }) {
   const [file, setFile] = useState<File | null>(null);
@@ -103,8 +104,8 @@ export default function PrescriptionUpload({ coords }: { coords: { lat: number, 
         formData.append("latitude", coords.lat.toString());
         formData.append("longitude", coords.lon.toString());
       }
-
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000/api";
+      
+      const apiUrl = getBaseUrl();
       const response = await fetch(`${apiUrl}/prescriptions/`, {
         method: "POST",
         headers: { 

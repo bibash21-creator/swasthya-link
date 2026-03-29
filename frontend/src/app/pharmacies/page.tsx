@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import { Search, MapPin, Navigation, Phone, Clock, ChevronRight, Shield, Star, Send } from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
+import { getBaseUrl, joinUrl } from "@/lib/api";
 
 const PharmacyMap = dynamic(() => import("@/components/PharmacyMap"), {
   ssr: false,
@@ -34,8 +35,8 @@ export default function PharmaciesPage() {
   useEffect(() => {
     const fetchPharmacies = async () => {
       try {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
-        const response = await fetch(`${apiUrl}/pharmacies/`);
+        const apiUrl = getBaseUrl();
+        const response = await fetch(joinUrl(apiUrl, "pharmacies/"));
         const data = await response.json();
         setPharmacies(data);
         if (data.length > 0) setSelectedPharmacy(data[0]);
@@ -65,8 +66,8 @@ export default function PharmaciesPage() {
 
     setIsSubmitting(true);
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
-      const response = await fetch(`${apiUrl}/pharmacies/${selectedPharmacy.id}/reviews`, {
+      const apiUrl = getBaseUrl();
+      const response = await fetch(joinUrl(apiUrl, `pharmacies/${selectedPharmacy.id}/reviews`), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

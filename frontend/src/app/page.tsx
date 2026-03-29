@@ -11,6 +11,7 @@ import Link from "next/link";
 import dynamic from "next/dynamic";
 import { AnimatedTestimonials } from "@/components/ui/animated-testimonials";
 import { DottedSurface } from "@/components/ui/dotted-surface";
+import { getBaseUrl, getUploadUrl, joinUrl } from "@/lib/api";
 
 // Lazy load heavy interactive components
 const PrescriptionUpload = dynamic(() => import("@/components/PrescriptionUpload"), {
@@ -19,13 +20,8 @@ const PrescriptionUpload = dynamic(() => import("@/components/PrescriptionUpload
 });
 
 // API configuration
-const getApiUrl = () => {
-  return process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
-};
-
-const getUploadUrl = () => {
-  return process.env.NEXT_PUBLIC_UPLOAD_URL || "http://localhost:8000";
-};
+const getApiUrl = getBaseUrl;
+const getFullUploadUrl = getUploadUrl;
 
 const fadeInUp = {
   initial: { opacity: 0, y: 40 },
@@ -47,20 +43,20 @@ export default function Home() {
   const [reviews, setReviews] = useState<any[]>([]);
 
   const apiUrl = getApiUrl();
-  const uploadUrl = getUploadUrl();
+  const uploadUrl = getFullUploadUrl();
 
   useEffect(() => {
-    fetch(`${apiUrl}/pharmacies/`)
+    fetch(joinUrl(apiUrl, "pharmacies/"))
       .then(r => r.json())
       .then(d => setPharmacies(Array.isArray(d) ? d.slice(0, 4) : []))
       .catch(() => {});
 
-    fetch(`${apiUrl}/pharmacies/shop`)
+    fetch(joinUrl(apiUrl, "pharmacies/shop"))
       .then(r => r.json())
       .then(d => setProducts(Array.isArray(d) ? d.slice(0, 6) : []))
       .catch(() => {});
 
-    fetch(`${apiUrl}/pharmacies/reviews/all`)
+    fetch(joinUrl(apiUrl, "pharmacies/reviews/all"))
       .then(r => r.json())
       .then(d => setReviews(Array.isArray(d) ? d.slice(0, 3) : []))
       .catch(() => {});
