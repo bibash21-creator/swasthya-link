@@ -1,9 +1,3 @@
 {
-  "version": 2,
-  "env": {
-    "NEXT_PUBLIC_API_URL": "@next_public_api_url",
-    "NEXT_PUBLIC_UPLOAD_URL": "@next_public_upload_url",
-    "NEXT_PUBLIC_APP_URL": "@next_public_app_url",
-    "NEXT_PUBLIC_MAPBOX_TOKEN": "@next_public_mapbox_token"
-  }
+  "version": 2
 }
