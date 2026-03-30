@@ -127,10 +127,10 @@ logger.info(f"Configured CORS origins: {allowed_origins}")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
+    allow_origin_regex=r"https://swasthyalink-.*\.vercel\.app",
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allow_methods=["*"],
     allow_headers=["*"],
-    expose_headers=["X-Request-ID"],
     max_age=600,
 )
 
