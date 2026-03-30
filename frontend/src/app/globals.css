@@ -188,3 +188,89 @@ html {
 .animate-slide-up {
   animation: slide-up 0.4s ease-out;
 }
+
+/* View Transitions for Theme Toggle */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+::view-transition-old(root) {
+  z-index: 1;
+}
+
+::view-transition-new(root) {
+  z-index: 9999;
+}
+
+.dark::view-transition-old(root) {
+  z-index: 9999;
+}
+
+.dark::view-transition-new(root) {
+  z-index: 1;
+}
+
+/* Marquee Animations */
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(calc(-100% - var(--gap)));
+  }
+}
+
+@keyframes marquee-vertical {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(calc(-100% - var(--gap)));
+  }
+}
+
+.animate-marquee {
+  animation: marquee var(--duration) linear infinite;
+}
+
+.animate-marquee-vertical {
+  animation: marquee-vertical var(--duration) linear infinite;
+}
+
+/* Backlight & Glow Effects */
+.backlight-effect {
+  position: relative;
+  z-index: 0;
+}
+
+.backlight-effect::before {
+  content: "";
+  position: absolute;
+  inset: -20%;
+  background: radial-gradient(
+    circle at center,
+    var(--backlight-color, hsl(var(--primary) / 0.1)) 0%,
+    transparent 80%
+  );
+  filter: blur(40px);
+  z-index: -1;
+  opacity: 0;
+  transition: opacity 1s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: none;
+}
+
+.group:hover .backlight-effect::before,
+.backlight-effect:hover::before {
+  opacity: 1;
+}
+
+.icon-glow-effect {
+  filter: drop-shadow(0 0 8px var(--glow-color, hsl(var(--primary) / 0.4)));
+  transition: filter 0.3s ease;
+}
+
+.group:hover .icon-glow-effect {
+  filter: drop-shadow(0 0 15px var(--glow-color, hsl(var(--primary) / 0.8)));
+}

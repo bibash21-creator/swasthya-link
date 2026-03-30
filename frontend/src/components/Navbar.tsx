@@ -7,6 +7,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import AuthModal from "./AuthModal";
 import MedLogo from "./MedLogo";
+import AnimatedThemeToggle from "./ui/animated-theme-toggle";
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -14,7 +15,6 @@ export default function Navbar() {
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userRole, setUserRole] = useState<string | null>(null);
-  const [theme, setTheme] = useState<"light" | "dark">("dark");
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -22,25 +22,10 @@ export default function Navbar() {
     
     setIsLoggedIn(localStorage.getItem("isLoggedIn") === "true");
     setUserRole(localStorage.getItem("userRole"));
-
-    const savedTheme = localStorage.getItem("theme") as "light" | "dark";
-    if (savedTheme) {
-      setTheme(savedTheme);
-      document.documentElement.classList.toggle("dark", savedTheme === "dark");
-    } else if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
-      setTheme("dark");
-      document.documentElement.classList.add("dark");
-    }
     
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const toggleTheme = () => {
-    const newTheme = theme === "light" ? "dark" : "light";
-    setTheme(newTheme);
-    localStorage.setItem("theme", newTheme);
-    document.documentElement.classList.toggle("dark", newTheme === "dark");
-  };
 
   const handleLogout = () => {
     localStorage.removeItem("isLoggedIn");
@@ -102,13 +87,7 @@ export default function Navbar() {
           animate={{ opacity: 1, x: 0 }}
           className="flex items-center gap-3"
         >
-          <motion.div 
-            whileTap={{ scale: 0.9 }}
-            onClick={toggleTheme}
-            className="p-2.5 rounded-xl bg-secondary/50 text-foreground cursor-pointer hover:bg-secondary transition-colors"
-          >
-            {theme === "light" ? <Moon size={20} /> : <Sun size={20} />}
-          </motion.div>
+          <AnimatedThemeToggle />
 
           {isLoggedIn ? (
             <div className="flex items-center gap-3">

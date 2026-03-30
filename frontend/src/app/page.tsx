@@ -12,6 +12,8 @@ import dynamic from "next/dynamic";
 import { AnimatedTestimonials } from "@/components/ui/animated-testimonials";
 import { DottedSurface } from "@/components/ui/dotted-surface";
 import { getBaseUrl, getUploadUrl, joinUrl } from "@/lib/api";
+import Marquee from "@/components/ui/marquee";
+import { BentoGrid, BentoCard } from "@/components/ui/bento-grid";
 
 // Lazy load heavy interactive components
 const PrescriptionUpload = dynamic(() => import("@/components/PrescriptionUpload"), {
@@ -26,14 +28,24 @@ const getFullUploadUrl = getUploadUrl;
 const fadeInUp = {
   initial: { opacity: 0, y: 40 },
   whileInView: { opacity: 1, y: 0 },
-  viewport: { once: true, margin: "-100px" },
+  viewport: { once: false, margin: "-50px" },
   transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] as any }
+};
+
+const sectionVariants = {
+  initial: { opacity: 0, scale: 0.9, y: 40, filter: "blur(4px)" },
+  whileInView: { opacity: 1, scale: 1, y: 0, filter: "blur(0px)" },
+  viewport: { once: false, amount: 0.15 },
+  transition: { 
+    duration: 1.2, 
+    ease: [0.22, 1, 0.36, 1] as any,
+  }
 };
 
 const staggerContainer = {
   initial: {},
   whileInView: { transition: { staggerChildren: 0.1 } },
-  viewport: { once: true }
+  viewport: { once: false }
 };
 
 export default function Home() {
@@ -142,15 +154,16 @@ export default function Home() {
              </div>
           </motion.div>
         </motion.div>
+        <div className="absolute inset-0 bg-primary/5 blur-[120px] -z-10 pointer-events-none" />
       </section>
 
       {/* Live Pharmacy Cards Section */}
       <motion.section 
-        {...fadeInUp}
-        className="py-32 border-t border-border bg-background"
+        {...sectionVariants}
+        className="py-32 border-t border-border bg-background/50 backdrop-blur-3xl overflow-hidden"
       >
-        <div className="max-w-7xl mx-auto px-6">
-           <div className="flex items-end justify-between mb-16 gap-8">
+        <div className="px-6 mb-16 max-w-7xl mx-auto">
+           <div className="flex items-end justify-between gap-8">
              <div>
                <span className="text-[10px] font-mono text-primary uppercase tracking-[0.4em] font-black block mb-3">Live Nearby</span>
                <h2 className="text-5xl md:text-6xl font-black italic uppercase tracking-tighter">
@@ -163,32 +176,31 @@ export default function Home() {
                </Link>
              </motion.div>
            </div>
+        </div>
 
-           <motion.div 
-             variants={staggerContainer}
-             initial="initial"
-             whileInView="whileInView"
-             viewport={{ once: true }}
-             className="grid md:grid-cols-2 lg:grid-cols-4 gap-6"
-           >
+        <div className="relative mt-12 w-full">
+          <Marquee pauseOnHover className="[--duration:60s] py-10" repeat={4}>
              {(pharmacies.length > 0 ? pharmacies : [
                { name: "Lalitpur Pharmacy", address: "Patan Dhoka", status: "Open" },
                { name: "Teaching Hospital", address: "Maharajgunj", status: "24/7" },
                { name: "Bir Hospital Area", address: "Mahaboudha", status: "Open" },
                { name: "Thamel Medical", address: "Thamel", status: "Open" },
              ]).map((ph, i) => (
-               <motion.div key={ph.id || i} variants={fadeInUp}>
-                 <PharmacyEnvelopeCard pharmacy={ph} index={i} />
-               </motion.div>
+               <div key={ph.id || i} className="w-[350px] mx-4 scale-95 hover:scale-100 transition-transform duration-500">
+                  <PharmacyEnvelopeCard pharmacy={ph} index={i} />
+               </div>
              ))}
-           </motion.div>
+          </Marquee>
+          {/* Fading Edges Mask */}
+          <div className="absolute inset-y-0 left-0 w-40 bg-gradient-to-r from-background to-transparent z-10 pointer-events-none" />
+          <div className="absolute inset-y-0 right-0 w-40 bg-gradient-to-l from-background to-transparent z-10 pointer-events-none" />
         </div>
       </motion.section>
 
       {/* Live Product Showcase */}
       {products.length > 0 && (
-        <motion.section 
-          {...fadeInUp}
+         <motion.section 
+          {...sectionVariants}
           className="py-24 bg-secondary/10 border-y border-border overflow-hidden"
         >
           <div className="max-w-7xl mx-auto px-6">
@@ -247,8 +259,8 @@ export default function Home() {
 
       {/* Perspective Toggle Section */}
       <motion.section 
-        {...fadeInUp}
-        className="py-40 bg-secondary/30 relative"
+        {...sectionVariants}
+        className="py-40 bg-secondary/30 relative overflow-hidden backlight-effect [--backlight-color:hsl(var(--primary)/0.05)]"
       >
         <div className="max-w-7xl mx-auto px-6">
            <div className="flex flex-col md:flex-row items-center justify-between mb-24 gap-12">
@@ -275,11 +287,36 @@ export default function Home() {
                      initial={{ opacity: 0, x: -20 }}
                      animate={{ opacity: 1, x: 0 }}
                      exit={{ opacity: 0, x: 20 }}
-                     className="space-y-10"
                    >
-                      <ProcessStep num="01" icon={<Camera className="text-primary" />} title="Snap Prescription" text="Take a photo of your doctor's list or type the name manually." />
-                      <ProcessStep num="02" icon={<Smartphone className="text-primary" />} title="Wait for Confirmation" text="Pharmacies in Kathmandu will check their shelves and confirm instantly." />
-                      <ProcessStep num="03" icon={<CheckCircle className="text-primary" />} title="Pickup & Pay" text="Go to the verified shop, show your code, and receive your medicine." />
+                     <BentoGrid className="lg:grid-cols-1 auto-rows-auto gap-6">
+                        <BentoCard
+                          name="Snap Prescription"
+                          description="Take a photo of your doctor's list or type the name manually."
+                          Icon={Camera}
+                          href="/upload"
+                          cta="Try Now"
+                          className="h-auto"
+                          background={<div className="absolute inset-0 bg-primary/5" />}
+                        />
+                        <BentoCard
+                          name="Wait for Confirmation"
+                          description="Pharmacies in Kathmandu will check their shelves and confirm instantly."
+                          Icon={Smartphone}
+                          href="#"
+                          cta="Status"
+                          className="h-auto"
+                          background={<div className="absolute inset-0 bg-blue-500/5" />}
+                        />
+                        <BentoCard
+                          name="Pickup & Pay"
+                          description="Go to the verified shop, show your code, and receive your medicine."
+                          Icon={CheckCircle}
+                          href="#"
+                          cta="Process"
+                          className="h-auto"
+                          background={<div className="absolute inset-0 bg-green-500/5" />}
+                        />
+                     </BentoGrid>
                    </motion.div>
                  ) : (
                    <motion.div 
@@ -287,11 +324,36 @@ export default function Home() {
                      initial={{ opacity: 0, x: -20 }}
                      animate={{ opacity: 1, x: 0 }}
                      exit={{ opacity: 0, x: 20 }}
-                     className="space-y-10"
                    >
-                      <ProcessStep num="01" icon={<Store className="text-primary" />} title="Receive Orders" text="Get instant notifications on your dashboard when a nearby patient needs stock." />
-                      <ProcessStep num="02" icon={<Clock className="text-primary" />} title="Inventory Verification" text="Confirm your stock levels in one tap and send a quote directly." />
-                      <ProcessStep num="03" icon={<User className="text-primary" />} title="Dispense Care" text="Verify the patient's ID at the counter and fulfill the order securely." />
+                     <BentoGrid className="lg:grid-cols-1 auto-rows-auto gap-6">
+                        <BentoCard
+                          name="Receive Orders"
+                          description="Get instant notifications on your dashboard when a nearby patient needs stock."
+                          Icon={Store}
+                          href="/dashboard/pharmacy"
+                          cta="View Orders"
+                          className="h-auto"
+                          background={<div className="absolute inset-0 bg-orange-500/5" />}
+                        />
+                        <BentoCard
+                          name="Inventory Verification"
+                          description="Confirm your stock levels in one tap and send a quote directly."
+                          Icon={Clock}
+                          href="#"
+                          cta="Verify"
+                          className="h-auto"
+                          background={<div className="absolute inset-0 bg-violet-500/5" />}
+                        />
+                        <BentoCard
+                          name="Dispense Care"
+                          description="Verify the patient's ID at the counter and fulfill the order securely."
+                          Icon={User}
+                          href="#"
+                          cta="Fulfill"
+                          className="h-auto"
+                          background={<div className="absolute inset-0 bg-cyan-500/5" />}
+                        />
+                     </BentoGrid>
                    </motion.div>
                  )}
               </AnimatePresence>
@@ -336,7 +398,10 @@ export default function Home() {
       </motion.section>
 
       {/* App Experience Section */}
-      <section className="py-40 bg-background relative overflow-hidden">
+      <motion.section 
+        {...sectionVariants}
+        className="py-40 bg-background relative overflow-hidden"
+      >
         <div className="max-w-7xl mx-auto px-6">
            <div className="grid lg:grid-cols-2 gap-20 items-center">
               
@@ -391,48 +456,75 @@ export default function Home() {
 
            </div>
         </div>
-      </section>
+      </motion.section>
 
-      {/* Support Cards */}
+      {/* Bento Support Section */}
       <motion.section 
-        {...fadeInUp}
+        {...sectionVariants}
         className="py-32 relative overflow-hidden border-y border-border"
       >
         <div className="max-w-7xl mx-auto px-6">
-          <div className="text-center mb-20">
+          <div className="text-center mb-24">
             <span className="text-[10px] font-mono text-primary uppercase tracking-[0.4em] font-black block mb-3">Built for Everyone</span>
             <h2 className="text-5xl md:text-6xl font-black italic uppercase tracking-tighter">Who We <span className="text-primary">Serve.</span></h2>
           </div>
-          <div className="grid md:grid-cols-3 gap-8">
-            <SupportCard
-              icon={<User size={32} />}
-              title="For Senior Citizens"
-              desc="Simple photo upload. No typing required. Big buttons and large text designed for comfortable reading."
-              color="from-violet-500/20 to-purple-600/5"
-              iconBg="bg-violet-500/20 text-violet-400"
+          
+          <BentoGrid className="lg:grid-cols-3 lg:grid-rows-2">
+            <BentoCard
+              name="Senior Citizens"
+              className="lg:col-span-2 lg:row-span-1"
+              Icon={User}
+              description="Simple photo upload. No typing required. AI-powered prescription reading for effortless care."
+              href="/pharmacies"
+              cta="Learn More"
+              background={
+                <div className="absolute inset-0 bg-dot-pattern opacity-10 [mask-image:radial-gradient(ellipse_at_center,black,transparent)]" />
+              }
             />
-            <SupportCard
-              icon={<Shield size={32} />}
-              title="For Families"
-              desc="Keep track of multiple family members' medications in one unified dashboard. Get instant stock alerts."
-              color="from-primary/20 to-primary/5"
-              iconBg="bg-primary/20 text-primary"
-              featured
+            <BentoCard
+              name="Local Families"
+              className="lg:col-span-1 lg:row-span-2"
+              Icon={Shield}
+              description="Unified dashboard for medical history. Real-time stock alerts for your loved ones."
+              href="/dashboard/patient"
+              cta="Get Started"
+              background={
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-transparent p-10">
+                   <div className="w-full h-full border-2 border-dashed border-primary/20 rounded-3xl animate-[pulse_5s_infinite]" />
+                </div>
+              }
             />
-            <SupportCard
-              icon={<Store size={32} />}
-              title="For Pharmacies"
-              desc="Grow your digital footprint and serve more locals without extra marketing costs. List your inventory."
-              color="from-emerald-500/20 to-teal-600/5"
-              iconBg="bg-emerald-500/20 text-emerald-400"
+            <BentoCard
+              name="Pharmacy Owners"
+              className="lg:col-span-1 lg:row-span-1"
+              Icon={Store}
+              description="Digitize your inventory and reach locals. Automated order matching and stock sync."
+              href="/dashboard/pharmacy"
+              cta="Join Network"
+              background={
+                <div className="absolute inset-0 bg-grid-pattern opacity-5" />
+              }
             />
-          </div>
+            <BentoCard
+              name="DDA Compliance"
+              className="lg:col-span-1 lg:row-span-1"
+              Icon={CheckCircle}
+              description="Fully verified by Nepal Department of Drug Administration. Security at every step."
+              href="/roadmap"
+              cta="Security"
+              background={
+                <div className="absolute inset-0 flex items-center justify-center opacity-10">
+                   <Shield size={200} className="text-primary" />
+                </div>
+              }
+            />
+          </BentoGrid>
         </div>
       </motion.section>
 
       {/* Feedback Section */}
       <motion.section 
-        {...fadeInUp}
+        {...sectionVariants}
         className="py-32 bg-background relative overflow-hidden"
       >
         <div className="max-w-7xl mx-auto px-6">
@@ -482,7 +574,7 @@ export default function Home() {
 
       {/* Final CTA */}
       <motion.section 
-        {...fadeInUp}
+        {...sectionVariants}
         className="py-60 flex flex-col items-center"
       >
          <h2 className="text-6xl md:text-[120px] font-black italic tracking-tighter mb-16 text-center leading-none uppercase">
@@ -526,7 +618,7 @@ function PharmacyEnvelopeCard({ pharmacy, index }: { pharmacy: any; index: numbe
   return (
     <div className="group relative cursor-pointer">
       <div className={`absolute -inset-0.5 rounded-[2.8rem] ${g.glow} blur-xl opacity-0 group-hover:opacity-60 transition-all duration-500`} />
-      <div className="relative rounded-[2.5rem] overflow-hidden border border-white/10 bg-white/5 backdrop-blur-2xl shadow-2xl shadow-black/30">
+      <div className="relative rounded-[2.5rem] overflow-hidden border border-white/10 bg-white/5 backdrop-blur-2xl shadow-2xl shadow-black/30 backlight-effect">
         <div className={`relative h-56 ${pharmacy.image_url ? '' : `bg-gradient-to-br ${g.from} ${g.to}`} overflow-hidden`}>
           {pharmacy.image_url ? (
             <img src={`${uploadUrl}${pharmacy.image_url}`} alt={pharmacy.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
@@ -555,7 +647,7 @@ function PharmacyEnvelopeCard({ pharmacy, index }: { pharmacy: any; index: numbe
 function ProcessStep({ num, icon, title, text }: any) {
   return (
     <div className="flex gap-8 group relative p-6 rounded-[2.5rem] hover:bg-white/[0.02] transition-all duration-500 border border-transparent hover:border-white/5">
-       <div className="w-16 h-16 rounded-[1.8rem] bg-white/[0.03] backdrop-blur-xl border border-white/10 flex items-center justify-center shrink-0 group-hover:border-primary/50 group-hover:scale-110 transition-all duration-500">
+       <div className="w-16 h-16 rounded-[1.8rem] bg-white/[0.03] backdrop-blur-xl border border-white/10 flex items-center justify-center shrink-0 group-hover:border-primary/50 group-hover:scale-110 transition-all duration-500 icon-glow-effect">
           {icon}
           <div className="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-[10px] font-black italic shadow-lg border-2 border-background">{num}</div>
        </div>
@@ -571,11 +663,11 @@ function SupportCard({ icon, title, desc, color, iconBg, featured }: any) {
   return (
     <motion.div
       whileHover={{ y: -10 }}
-      className={`group relative rounded-[2.5rem] overflow-hidden border ${featured ? 'border-primary/40' : 'border-white/10'} bg-white/[0.03] backdrop-blur-2xl`}
+      className={`group relative rounded-[2.5rem] overflow-hidden border ${featured ? 'border-primary/40' : 'border-white/10'} bg-white/[0.03] backdrop-blur-2xl backlight-effect`}
     >
       <div className={`h-1.5 w-full bg-gradient-to-r ${color}`} />
       <div className="p-8 pt-6">
-        <div className={`w-16 h-16 rounded-2xl ${iconBg} mb-6 flex items-center justify-center shadow-xl`}>{icon}</div>
+        <div className={`w-16 h-16 rounded-2xl ${iconBg} mb-6 flex items-center justify-center shadow-xl icon-glow-effect`}>{icon}</div>
         <h4 className="text-2xl font-black italic uppercase tracking-tighter mb-4">{title}</h4>
         <p className="text-sm text-white/50 mb-6">{desc}</p>
         <div className="text-[9px] font-black uppercase tracking-widest text-primary flex items-center gap-2">
