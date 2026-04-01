@@ -41,6 +41,11 @@ class Settings(BaseSettings):
     # External Services
     MAPBOX_ACCESS_TOKEN: str = ""
     
+    # Email Configuration (Resend)
+    RESEND_API_KEY: str = Field(default="", description="Resend API key for sending emails")
+    FROM_EMAIL: str = Field(default="noreply@yourdomain.com", description="Sender email address")
+    FROM_NAME: str = Field(default="SwasthyaLink", description="Sender name")
+    
     # Rate Limiting
     RATE_LIMIT_REQUESTS: int = 100
     RATE_LIMIT_WINDOW: int = 60

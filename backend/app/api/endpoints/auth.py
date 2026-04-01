@@ -9,6 +9,7 @@ from app.db import models, database
 from app.schemas import schemas
 from app.core.config import settings
 from app.core.audit import log_action
+from app.core.email import send_otp_email, send_welcome_email
 import random
 import logging
 import bcrypt
@@ -81,12 +82,19 @@ async def login_for_access_token(
         db.add(v_code)
         db.commit()
         
-        log_action(db, admin.id, "admin", "admin_login_requested", "Password OK. OTP Sent.")
-        logger.info(f"OTP generated for admin: {form_data.username}")
+        # Send OTP via email
+        email_sent = send_otp_email(form_data.username, otp, admin.full_name)
+        
+        if email_sent:
+            log_action(db, admin.id, "admin", "admin_login_requested", "Password OK. OTP sent via email.")
+            logger.info(f"OTP sent via email to admin: {form_data.username}")
+        else:
+            log_action(db, admin.id, "admin", "admin_login_requested", "Password OK. Email failed - check logs for OTP.")
+            logger.warning(f"Failed to send OTP email to admin: {form_data.username}. OTP: {otp}")
         
         return {
             "status": "otp_required",
-            "message": "Verification code sent to email",
+            "message": "Verification code sent to your email" if email_sent else "Verification code generated (check server logs)",
             "email": form_data.username,
             "role": "admin"
         }
@@ -156,12 +164,19 @@ async def request_otp(email: str, db: Session = Depends(database.get_db)):
     db.add(v_code)
     db.commit()
     
-    # TODO: Integrate with email service (SendGrid, AWS SES, etc.)
-    logger.info(f"OTP generated for {email}: {otp}")
+    # Send OTP via email
+    user_name = user.full_name if hasattr(user, 'full_name') else (user.name if hasattr(user, 'name') else "")
+    email_sent = send_otp_email(email, otp, user_name)
+    
+    if email_sent:
+        logger.info(f"OTP sent via email to {email}")
+    else:
+        logger.warning(f"Failed to send OTP email to {email}. OTP: {otp}")
     
     return {
-        "message": "OTP sent successfully",
-        "expires_in_minutes": settings.OTP_EXPIRE_MINUTES
+        "message": "OTP sent to your email" if email_sent else "OTP generated (check server logs)",
+        "expires_in_minutes": settings.OTP_EXPIRE_MINUTES,
+        "email_sent": email_sent
     }
 
 
@@ -208,6 +223,10 @@ async def verify_otp(email: str, code: str, db: Session = Depends(database.get_d
     
     log_action(db, user.id, role, "otp_verified")
     logger.info(f"OTP verified for {email} ({role})")
+    
+    # Send welcome email for first-time verified users
+    user_name = user.full_name if hasattr(user, 'full_name') else (user.name if hasattr(user, 'name') else "")
+    send_welcome_email(email, user_name, role)
     
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     token = create_access_token(

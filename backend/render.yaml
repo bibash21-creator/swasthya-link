@@ -19,6 +19,12 @@ services:
         value: "false"
       - key: ALLOWED_ORIGINS
         value: "https://swasthyalink-teal.vercel.app,http://localhost:3000,http://127.0.0.1:3000"
+      - key: RESEND_API_KEY
+        sync: false  # Set this manually in Render dashboard
+      - key: FROM_EMAIL
+        value: "noreply@resend.dev"
+      - key: FROM_NAME
+        value: "SwasthyaLink"
     disk:
       name: uploads
       mountPath: /app/uploads
