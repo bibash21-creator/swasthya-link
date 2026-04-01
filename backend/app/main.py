@@ -131,15 +131,27 @@ setup_exception_handlers(app)
 
 # CORS Configuration from environment
 allowed_origins = [origin.strip() for origin in settings.ALLOWED_ORIGINS.split(",") if origin.strip()]
+
+# Always include production frontend URL
+production_origins = [
+    "https://swasthyalink-teal.vercel.app",
+    "https://swasthyalink.vercel.app",
+]
+
+# Add production origins if not already present
+for origin in production_origins:
+    if origin not in allowed_origins:
+        allowed_origins.append(origin)
+
 if not allowed_origins:
     allowed_origins = ["*"]
     logger.warning("No ALLOWED_ORIGINS provided; enabling wildcard CORS for development")
+
 logger.info(f"Configured CORS origins: {allowed_origins}")
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
-    allow_origin_regex=r"^https://swasthyalink(?:-[a-z0-9-]+)?\.vercel\.app$",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
