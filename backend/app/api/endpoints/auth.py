@@ -173,11 +173,20 @@ async def request_otp(email: str, db: Session = Depends(database.get_db)):
     else:
         logger.warning(f"Failed to send OTP email to {email}. OTP: {otp}")
     
-    return {
-        "message": "OTP sent to your email" if email_sent else "OTP generated (check server logs)",
+    # For free Resend tier: return OTP in response when email fails
+    # This allows testing without a verified domain
+    response_data = {
+        "message": "OTP sent to your email" if email_sent else "OTP generated (use code below)",
         "expires_in_minutes": settings.OTP_EXPIRE_MINUTES,
         "email_sent": email_sent
     }
+    
+    # Include OTP in response for development/free tier (remove in production with verified domain)
+    if not email_sent:
+        response_data["otp"] = otp
+        response_data["note"] = "Free tier mode: OTP shown for testing. Verify domain to send emails."
+    
+    return response_data
 
 
 @router.post("/verify-otp")
