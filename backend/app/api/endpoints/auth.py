@@ -11,6 +11,7 @@ from app.core.config import settings
 from app.core.audit import log_action
 import random
 import logging
+import bcrypt
 
 router = APIRouter()
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -18,12 +19,14 @@ logger = logging.getLogger(__name__)
 
 
 def verify_password(plain_password, hashed_password):
-    """Verify a plain password against a hashed password."""
+    """Verify a plain password against a hashed password using bcrypt directly."""
     # Bcrypt has a 72-byte limit, truncate if necessary
     password_bytes = plain_password.encode('utf-8')
     if len(password_bytes) > 72:
         password_bytes = password_bytes[:72]
-    return pwd_context.verify(password_bytes, hashed_password)
+    # Use bcrypt directly to avoid passlib's validation
+    hashed_bytes = hashed_password.encode('utf-8') if isinstance(hashed_password, str) else hashed_password
+    return bcrypt.checkpw(password_bytes, hashed_bytes)
 
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
