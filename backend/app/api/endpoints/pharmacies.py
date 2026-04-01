@@ -28,7 +28,11 @@ MAX_FILE_SIZE = settings.MAX_UPLOAD_SIZE_MB * 1024 * 1024  # Convert MB to bytes
 
 def get_password_hash(password):
     """Hash a password using bcrypt."""
-    return pwd_context.hash(password)
+    # Bcrypt has a 72-byte limit, truncate if necessary
+    password_bytes = password.encode('utf-8')
+    if len(password_bytes) > 72:
+        password_bytes = password_bytes[:72]
+    return pwd_context.hash(password_bytes)
 
 
 def validate_image_file(file: UploadFile) -> None:

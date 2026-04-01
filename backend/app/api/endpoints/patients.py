@@ -9,7 +9,11 @@ router = APIRouter()
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 def get_password_hash(password):
-    return pwd_context.hash(password)
+    # Bcrypt has a 72-byte limit, truncate if necessary
+    password_bytes = password.encode('utf-8')
+    if len(password_bytes) > 72:
+        password_bytes = password_bytes[:72]
+    return pwd_context.hash(password_bytes)
 
 @router.post("/register", response_model=schemas.Patient)
 def register_patient(patient: schemas.PatientCreate, db: Session = Depends(database.get_db)):
