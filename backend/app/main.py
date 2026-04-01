@@ -8,7 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import JSONResponse
 from sqlalchemy.exc import OperationalError
-from passlib.context import CryptContext
+import bcrypt
 
 from .api.endpoints import patients, pharmacies, prescriptions, auth, admin, orders
 from .db import models, database
@@ -55,6 +55,16 @@ def init_database_with_retry(max_retries=5, retry_delay=2):
     return False
 
 
+def hash_password(password: str) -> str:
+    """Hash password using native bcrypt with 72-byte truncation."""
+    password_bytes = password.encode('utf-8')
+    # Bcrypt has a 72-byte limit, truncate if necessary
+    if len(password_bytes) > 72:
+        password_bytes = password_bytes[:72]
+    hashed = bcrypt.hashpw(password_bytes, bcrypt.gensalt())
+    return hashed.decode('utf-8')
+
+
 def create_admin_user():
     """Create default admin user from environment variables."""
     admin_email = settings.ADMIN_EMAIL
@@ -67,13 +77,12 @@ def create_admin_user():
     db = None
     try:
         db = next(database.get_db())
-        pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
         
         admin_user = db.query(models.Admin).filter(models.Admin.email == admin_email).first()
         if not admin_user:
             admin_user = models.Admin(
                 email=admin_email,
-                hashed_password=pwd_context.hash(admin_password),
+                hashed_password=hash_password(admin_password),
                 full_name="System Administrator"
             )
             db.add(admin_user)
