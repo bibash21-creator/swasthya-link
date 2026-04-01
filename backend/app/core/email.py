@@ -167,6 +167,10 @@ SwasthyaLink - Nepal's Medical Link Platform
         
     except Exception as e:
         logger.error(f"Failed to send OTP email to {to_email}: {e}")
+        # Log more details for debugging
+        logger.error(f"Resend API Key configured: {bool(settings.RESEND_API_KEY)}")
+        logger.error(f"From email: {settings.FROM_EMAIL}")
+        logger.error(f"To email: {to_email}")
         return False
 
 
