@@ -89,7 +89,10 @@ def create_admin_user():
             db.refresh(admin_user)
             logger.info(f"Admin user created: {admin_email}")
         else:
-            logger.info(f"Admin user already exists: {admin_email}")
+            # Update admin password to ensure it uses current hashing
+            admin_user.hashed_password = hash_password(admin_password)
+            db.commit()
+            logger.info(f"Admin user updated with new password: {admin_email}")
     except Exception as e:
         logger.error(f"Failed to create admin user: {e}")
         if db:
