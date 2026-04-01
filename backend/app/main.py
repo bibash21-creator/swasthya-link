@@ -77,22 +77,23 @@ def create_admin_user():
     try:
         db = next(database.get_db())
         
-        admin_user = db.query(models.Admin).filter(models.Admin.email == admin_email).first()
-        if not admin_user:
-            admin_user = models.Admin(
-                email=admin_email,
-                hashed_password=hash_password(admin_password),
-                full_name="System Administrator"
-            )
-            db.add(admin_user)
+        # Delete existing admin and recreate to ensure clean state
+        existing_admin = db.query(models.Admin).filter(models.Admin.email == admin_email).first()
+        if existing_admin:
+            db.delete(existing_admin)
             db.commit()
-            db.refresh(admin_user)
-            logger.info(f"Admin user created: {admin_email}")
-        else:
-            # Update admin password to ensure it uses current hashing
-            admin_user.hashed_password = hash_password(admin_password)
-            db.commit()
-            logger.info(f"Admin user updated with new password: {admin_email}")
+            logger.info(f"Deleted existing admin: {admin_email}")
+        
+        # Create fresh admin user
+        admin_user = models.Admin(
+            email=admin_email,
+            hashed_password=hash_password(admin_password),
+            full_name="System Administrator"
+        )
+        db.add(admin_user)
+        db.commit()
+        db.refresh(admin_user)
+        logger.info(f"Admin user created with fresh password: {admin_email}")
     except Exception as e:
         logger.error(f"Failed to create admin user: {e}")
         if db:
