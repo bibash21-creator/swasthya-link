@@ -299,3 +299,160 @@ def send_welcome_email(to_email: str, user_name: str, role: str) -> bool:
     except Exception as e:
         logger.error(f"Failed to send welcome email to {to_email}: {e}")
         return False
+
+
+def send_password_reset_email(to_email: str, reset_token: str, user_name: str = "") -> bool:
+    """
+    Send password reset email to user.
+    
+    Args:
+        to_email: Recipient email address
+        reset_token: The password reset token
+        user_name: Optional user name for personalization
+        
+    Returns:
+        bool: True if email sent successfully, False otherwise
+    """
+    if not settings.RESEND_API_KEY:
+        logger.warning("RESEND_API_KEY not configured. Email not sent.")
+        return False
+    
+    try:
+        subject = "Password Reset Request - SwasthyaLink"
+        reset_url = f"https://swasthyalink-teal.vercel.app/reset-password?token={reset_token}&email={to_email}"
+        
+        html_content = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Password Reset</title>
+            <style>
+                body {{
+                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                    background-color: #f4f4f5;
+                    margin: 0;
+                    padding: 20px;
+                }}
+                .container {{
+                    max-width: 480px;
+                    margin: 0 auto;
+                    background-color: #ffffff;
+                    border-radius: 12px;
+                    padding: 40px;
+                    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                }}
+                .logo {{
+                    text-align: center;
+                    margin-bottom: 30px;
+                }}
+                .logo h1 {{
+                    color: #059669;
+                    font-size: 28px;
+                    margin: 0;
+                }}
+                .content {{
+                    text-align: center;
+                }}
+                .greeting {{
+                    font-size: 18px;
+                    color: #1f2937;
+                    margin-bottom: 16px;
+                }}
+                .message {{
+                    font-size: 14px;
+                    color: #6b7280;
+                    margin-bottom: 24px;
+                    line-height: 1.6;
+                }}
+                .reset-button {{
+                    background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+                    color: white;
+                    text-decoration: none;
+                    padding: 14px 32px;
+                    border-radius: 8px;
+                    display: inline-block;
+                    font-weight: 600;
+                    margin: 20px 0;
+                }}
+                .expiry {{
+                    font-size: 13px;
+                    color: #9ca3af;
+                    margin-top: 20px;
+                }}
+                .footer {{
+                    margin-top: 30px;
+                    padding-top: 20px;
+                    border-top: 1px solid #e5e7eb;
+                    text-align: center;
+                    font-size: 12px;
+                    color: #9ca3af;
+                }}
+                .security-notice {{
+                    background-color: #fef3c7;
+                    border-left: 4px solid #f59e0b;
+                    padding: 12px 16px;
+                    margin-top: 20px;
+                    font-size: 13px;
+                    color: #92400e;
+                    text-align: left;
+                }}
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="logo">
+                    <h1>SwasthyaLink</h1>
+                </div>
+                <div class="content">
+                    <p class="greeting">Hello {user_name or 'there'},</p>
+                    <p class="message">
+                        We received a request to reset your password. Click the button below to create a new password:
+                    </p>
+                    <a href="{reset_url}" class="reset-button">Reset Password</a>
+                    <p class="expiry">
+                        This link will expire in 30 minutes.
+                    </p>
+                    <div class="security-notice">
+                        <strong>Security Tip:</strong> If you didn't request this reset, please ignore this email. Your password will remain unchanged.
+                    </div>
+                </div>
+                <div class="footer">
+                    <p>This is an automated message from SwasthyaLink.</p>
+                    <p>If the button doesn't work, copy this link: {reset_url}</p>
+                </div>
+            </div>
+        </body>
+        </html>
+        """
+        
+        text_content = f"""
+Hello {user_name or 'there'},
+
+We received a request to reset your password. Visit this link to reset it:
+{reset_url}
+
+This link will expire in 30 minutes.
+
+If you didn't request this, please ignore this email.
+
+---
+SwasthyaLink - Nepal's Medical Link Platform
+        """
+        
+        params = {{
+            "from": f"{settings.FROM_NAME} <{settings.FROM_EMAIL}>",
+            "to": [to_email],
+            "subject": subject,
+            "html": html_content,
+            "text": text_content,
+        }}
+        
+        response = resend.Emails.send(params)
+        logger.info(f"Password reset email sent to {to_email}, message ID: {response.get('id')}")
+        return True
+        
+    except Exception as e:
+        logger.error(f"Failed to send password reset email to {to_email}: {e}")
+        return False

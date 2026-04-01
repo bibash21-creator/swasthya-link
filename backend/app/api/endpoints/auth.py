@@ -9,7 +9,7 @@ from app.db import models, database
 from app.schemas import schemas
 from app.core.config import settings
 from app.core.audit import log_action
-from app.core.email import send_otp_email, send_welcome_email
+from app.core.email import send_otp_email, send_welcome_email, send_password_reset_email
 import random
 import logging
 import bcrypt
@@ -243,3 +243,81 @@ async def verify_otp(email: str, code: str, db: Session = Depends(database.get_d
         expires_delta=access_token_expires
     )
     return {"access_token": token, "token_type": "bearer", "role": role}
+
+
+@router.post("/forgot-password")
+async def forgot_password(email: str, db: Session = Depends(database.get_db)):
+    """Request password reset link."""
+    # Find user in any table
+    user = db.query(models.Patient).filter(models.Patient.email == email).first()
+    role = "patient"
+    
+    if not user:
+        user = db.query(models.Pharmacy).filter(models.Pharmacy.email == email).first()
+        role = "pharmacy"
+    
+    if not user:
+        user = db.query(models.Admin).filter(models.Admin.email == email).first()
+        role = "admin"
+    
+    if not user:
+        # Return success even if user not found (security best practice)
+        return {"message": "If an account exists, a reset link has been sent"}
+    
+    # Generate reset token (valid for 30 minutes)
+    reset_token = create_access_token(
+        data={"sub": email, "role": role, "type": "password_reset"},
+        expires_delta=timedelta(minutes=30)
+    )
+    
+    # Send reset email
+    user_name = user.full_name if hasattr(user, 'full_name') else (user.name if hasattr(user, 'name') else "")
+    email_sent = send_password_reset_email(email, reset_token, user_name)
+    
+    if email_sent:
+        logger.info(f"Password reset email sent to {email}")
+    else:
+        logger.warning(f"Failed to send password reset email to {email}")
+    
+    return {
+        "message": "If an account exists, a reset link has been sent",
+        "email_sent": email_sent,
+        # For free tier: include token in response when email fails
+        **({"reset_token": reset_token, "note": "Free tier mode: Token shown for testing"} if not email_sent else {})
+    }
+
+
+@router.post("/reset-password")
+async def reset_password(token: str, new_password: str, db: Session = Depends(database.get_db)):
+    """Reset password using reset token."""
+    try:
+        # Verify token
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+        email: str = payload.get("sub")
+        token_type: str = payload.get("type")
+        
+        if not email or token_type != "password_reset":
+            raise HTTPException(status_code=400, detail="Invalid reset token")
+        
+    except JWTError:
+        raise HTTPException(status_code=400, detail="Invalid or expired reset token")
+    
+    # Find user
+    user = db.query(models.Patient).filter(models.Patient.email == email).first()
+    
+    if not user:
+        user = db.query(models.Pharmacy).filter(models.Pharmacy.email == email).first()
+    
+    if not user:
+        user = db.query(models.Admin).filter(models.Admin.email == email).first()
+    
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Update password
+    hashed_password = pwd_context.hash(new_password)
+    user.hashed_password = hashed_password
+    db.commit()
+    
+    logger.info(f"Password reset successful for {email}")
+    return {"message": "Password reset successful"}
