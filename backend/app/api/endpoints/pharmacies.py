@@ -9,14 +9,13 @@ import os
 import uuid
 import shutil
 import logging
-import bcrypt
+from argon2 import PasswordHasher
 
 from app.api import deps
-from passlib.context import CryptContext
 from app.core.config import settings
 
 router = APIRouter()
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+ph = PasswordHasher(time_cost=2, memory_cost=65536, parallelism=1)
 logger = logging.getLogger(__name__)
 
 UPLOAD_DIR = "uploads/products"
@@ -28,15 +27,8 @@ MAX_FILE_SIZE = settings.MAX_UPLOAD_SIZE_MB * 1024 * 1024  # Convert MB to bytes
 
 
 def get_password_hash(password):
-    """Hash a password using bcrypt directly with proper truncation."""
-    # Bcrypt has a 72-byte limit, truncate if necessary
-    password_bytes = password.encode('utf-8')
-    if len(password_bytes) > 72:
-        password_bytes = password_bytes[:72]
-    # Use bcrypt directly to avoid passlib's validation
-    salt = bcrypt.gensalt()
-    hashed = bcrypt.hashpw(password_bytes, salt)
-    return hashed.decode('utf-8')
+    """Hash password using Argon2 - no length limits."""
+    return ph.hash(password)
 
 
 def validate_image_file(file: UploadFile) -> None:

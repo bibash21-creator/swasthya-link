@@ -3,7 +3,8 @@ from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from jose import JWTError, jwt
-from passlib.context import CryptContext
+from argon2 import PasswordHasher
+from argon2.exceptions import VerifyMismatchError
 from sqlalchemy.orm import Session
 from app.db import models, database
 from app.schemas import schemas
@@ -12,22 +13,24 @@ from app.core.audit import log_action
 from app.core.email import send_otp_email, send_welcome_email, send_password_reset_email
 import random
 import logging
-import bcrypt
 
 router = APIRouter()
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+ph = PasswordHasher(time_cost=2, memory_cost=65536, parallelism=1)
 logger = logging.getLogger(__name__)
 
 
 def verify_password(plain_password, hashed_password):
-    """Verify a plain password against a hashed password using bcrypt directly."""
-    # Bcrypt has a 72-byte limit, truncate if necessary
-    password_bytes = plain_password.encode('utf-8')
-    if len(password_bytes) > 72:
-        password_bytes = password_bytes[:72]
-    # Use bcrypt directly to avoid passlib's validation
-    hashed_bytes = hashed_password.encode('utf-8') if isinstance(hashed_password, str) else hashed_password
-    return bcrypt.checkpw(password_bytes, hashed_bytes)
+    """Verify a plain password against a hashed password using Argon2."""
+    try:
+        ph.verify(hashed_password, plain_password)
+        return True
+    except VerifyMismatchError:
+        return False
+
+
+def hash_password(password: str) -> str:
+    """Hash password using Argon2 - no length limits."""
+    return ph.hash(password)
 
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
@@ -315,8 +318,7 @@ async def reset_password(token: str, new_password: str, db: Session = Depends(da
         raise HTTPException(status_code=404, detail="User not found")
     
     # Update password
-    hashed_password = pwd_context.hash(new_password)
-    user.hashed_password = hashed_password
+    user.hashed_password = hash_password(new_password)
     db.commit()
     
     logger.info(f"Password reset successful for {email}")

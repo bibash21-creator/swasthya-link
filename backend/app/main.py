@@ -8,7 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import JSONResponse
 from sqlalchemy.exc import OperationalError
-import bcrypt
+from argon2 import PasswordHasher
 
 from .api.endpoints import patients, pharmacies, prescriptions, auth, admin, orders
 from .db import models, database
@@ -55,14 +55,13 @@ def init_database_with_retry(max_retries=5, retry_delay=2):
     return False
 
 
+# Argon2 password hasher - no length limits
+ph = PasswordHasher(time_cost=2, memory_cost=65536, parallelism=1)
+
+
 def hash_password(password: str) -> str:
-    """Hash password using native bcrypt with 72-byte truncation."""
-    password_bytes = password.encode('utf-8')
-    # Bcrypt has a 72-byte limit, truncate if necessary
-    if len(password_bytes) > 72:
-        password_bytes = password_bytes[:72]
-    hashed = bcrypt.hashpw(password_bytes, bcrypt.gensalt())
-    return hashed.decode('utf-8')
+    """Hash password using Argon2 - no length limits."""
+    return ph.hash(password)
 
 
 def create_admin_user():
