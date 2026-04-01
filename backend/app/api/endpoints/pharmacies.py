@@ -139,7 +139,11 @@ def get_nearby_pharmacies(
 @router.get("/", response_model=list[schemas.Pharmacy])
 def read_pharmacies(db: Session = Depends(database.get_db)):
     """Get all pharmacies."""
-    return db.query(models.Pharmacy).all()
+    try:
+        return db.query(models.Pharmacy).all()
+    except Exception as e:
+        logger.error(f"Error fetching pharmacies: {e}")
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
 
 
 @router.get("/all", response_model=list[schemas.Pharmacy])
@@ -276,16 +280,20 @@ def post_pharmacy_review(
 @router.get("/reviews/all", response_model=List[schemas.Review])
 def get_all_reviews(db: Session = Depends(database.get_db)):
     """Fetch recent reviews for the landing page."""
-    reviews = db.query(models.Review, models.Patient.full_name, models.Pharmacy.name).join(
-        models.Patient, models.Review.patient_id == models.Patient.id
-    ).join(
-        models.Pharmacy, models.Review.pharmacy_id == models.Pharmacy.id
-    ).order_by(models.Review.created_at.desc()).limit(10).all()
-    
-    result = []
-    for review, p_name, ph_name in reviews:
-        r = schemas.Review.model_validate(review)
-        r.patient_name = p_name
-        r.pharmacy_name = ph_name
-        result.append(r)
-    return result
+    try:
+        reviews = db.query(models.Review, models.Patient.full_name, models.Pharmacy.name).join(
+            models.Patient, models.Review.patient_id == models.Patient.id
+        ).join(
+            models.Pharmacy, models.Review.pharmacy_id == models.Pharmacy.id
+        ).order_by(models.Review.created_at.desc()).limit(10).all()
+        
+        result = []
+        for review, p_name, ph_name in reviews:
+            r = schemas.Review.model_validate(review)
+            r.patient_name = p_name
+            r.pharmacy_name = ph_name
+            result.append(r)
+        return result
+    except Exception as e:
+        logger.error(f"Error fetching reviews: {e}")
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")

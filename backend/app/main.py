@@ -33,11 +33,12 @@ for upload_dir in ["uploads", "uploads/prescriptions", "uploads/products"]:
 
 def init_database_with_retry(max_retries=5, retry_delay=2):
     """Initialize database with retry logic for production deployments."""
+    from sqlalchemy import text
     for attempt in range(max_retries):
         try:
             # Test connection
             with engine.connect() as conn:
-                conn.execute("SELECT 1")
+                conn.execute(text("SELECT 1"))
             logger.info("Database connection successful")
             
             # Create tables (in production, use migrations instead)
@@ -171,9 +172,10 @@ def health_check():
 @app.get("/ready", tags=["health"])
 def readiness_check():
     """Readiness probe - checks database connectivity."""
+    from sqlalchemy import text
     try:
         with engine.connect() as conn:
-            conn.execute("SELECT 1")
+            conn.execute(text("SELECT 1"))
         return JSONResponse(
             status_code=status.HTTP_200_OK,
             content={"status": "ready", "database": "connected"}

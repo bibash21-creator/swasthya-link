@@ -13,24 +13,30 @@ def get_password_hash(password):
 
 @router.post("/register", response_model=schemas.Patient)
 def register_patient(patient: schemas.PatientCreate, db: Session = Depends(database.get_db)):
-    if patient.email == "godc7711@gmail.com":
-        raise HTTPException(status_code=400, detail="Registration restricted for this account.")
+    try:
+        if patient.email == "godc7711@gmail.com":
+            raise HTTPException(status_code=400, detail="Registration restricted for this account.")
+            
+        db_patient = db.query(models.Patient).filter(models.Patient.email == patient.email).first()
+        if db_patient:
+            raise HTTPException(status_code=400, detail="Email already registered")
         
-    db_patient = db.query(models.Patient).filter(models.Patient.email == patient.email).first()
-    if db_patient:
-        raise HTTPException(status_code=400, detail="Email already registered")
-    
-    new_patient = models.Patient(
-        full_name=patient.full_name,
-        email=patient.email,
-        hashed_password=get_password_hash(patient.password),
-        latitude=patient.latitude,
-        longitude=patient.longitude
-    )
-    db.add(new_patient)
-    db.commit()
-    db.refresh(new_patient)
-    return new_patient
+        new_patient = models.Patient(
+            full_name=patient.full_name,
+            email=patient.email,
+            hashed_password=get_password_hash(patient.password),
+            latitude=patient.latitude,
+            longitude=patient.longitude
+        )
+        db.add(new_patient)
+        db.commit()
+        db.refresh(new_patient)
+        return new_patient
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Registration failed: {str(e)}")
 
 @router.get("/all", response_model=list[schemas.Patient])
 def get_all_patients(
