@@ -15,6 +15,7 @@ export default function AuthModal({ isOpen, onClose }: { isOpen: boolean, onClos
   const [otp, setOtp] = useState("");
   const [showOtp, setShowOtp] = useState(false);
   const [authStatus, setAuthStatus] = useState<string | null>(null);
+  const [displayOtp, setDisplayOtp] = useState<string | null>(null);
   const [coords, setCoords] = useState<{lat: number, lng: number} | null>(null);
 
   const handleGetLocation = () => {
@@ -75,6 +76,11 @@ export default function AuthModal({ isOpen, onClose }: { isOpen: boolean, onClos
         if (data.status === 'otp_required' || data.status === 'verification_required') {
           setAuthStatus(data.status);
           setShowOtp(true);
+          // Handle free tier: show OTP in UI if email failed
+          if (data.otp) {
+            setDisplayOtp(data.otp);
+            toast.info(`Your OTP: ${data.otp} (Free tier mode)`);
+          }
           return;
         }
 
@@ -161,10 +167,18 @@ export default function AuthModal({ isOpen, onClose }: { isOpen: boolean, onClos
 
             <form onSubmit={handleAuth} className="space-y-4">
               {showOtp ? (
-                <div className="relative">
-                  <ShieldCheck className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" size={16} />
-                  <input type="text" placeholder="6-Digit OTP" value={otp} onChange={(e) => setOtp(e.target.value)} required className="w-full bg-secondary border border-border rounded-2xl pl-12 pr-4 py-4 text-xs font-mono tracking-[1em] focus:outline-none focus:ring-1 focus:ring-primary/30 transition-all text-foreground" />
-                </div>
+                <>
+                  {displayOtp && (
+                    <div className="mb-4 p-4 bg-amber-500/10 border border-amber-500/30 rounded-2xl text-center">
+                      <p className="text-[10px] text-amber-600 font-mono uppercase tracking-widest mb-2">Your Verification Code (Free Tier)</p>
+                      <p className="text-2xl font-black tracking-[0.5em] text-amber-600">{displayOtp}</p>
+                    </div>
+                  )}
+                  <div className="relative">
+                    <ShieldCheck className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" size={16} />
+                    <input type="text" placeholder="6-Digit OTP" value={otp} onChange={(e) => setOtp(e.target.value)} required className="w-full bg-secondary border border-border rounded-2xl pl-12 pr-4 py-4 text-xs font-mono tracking-[1em] focus:outline-none focus:ring-1 focus:ring-primary/30 transition-all text-foreground" />
+                  </div>
+                </>
               ) : (
                 <>
                   {tab === 'signup' && (
