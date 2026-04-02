@@ -132,10 +132,24 @@ class Order(Base):
     patient_id = Column(Integer, ForeignKey("patients.id", ondelete="CASCADE"), nullable=False, index=True)
     pharmacy_id = Column(Integer, ForeignKey("pharmacies.id", ondelete="CASCADE"), nullable=False, index=True)
     total_amount = Column(Float, nullable=False)
-    status = Column(String(50), default="pending", nullable=False, index=True)  # pending, paid, shipped, delivered, cancelled
+    status = Column(String(50), default="pending", nullable=False, index=True)  # pending, paid, preparing, shipped, delivered, cancelled
     payment_method = Column(String(50), nullable=True, index=True)  # esewa, khalti, cod
     payment_status = Column(String(50), default="unpaid", nullable=False, index=True)  # unpaid, paid, failed, refunded
     transaction_id = Column(String(255), nullable=True, index=True)  # from payment gateway
+    
+    # Delivery tracking
+    delivery_address = Column(String(500), nullable=True)
+    delivery_lat = Column(Float, nullable=True)  # Patient location for delivery
+    delivery_lon = Column(Float, nullable=True)
+    delivery_notes = Column(String(500), nullable=True)
+    
+    # Real-time tracking
+    rider_name = Column(String(255), nullable=True)
+    rider_phone = Column(String(50), nullable=True)
+    rider_lat = Column(Float, nullable=True)  # Rider current location
+    rider_lon = Column(Float, nullable=True)
+    estimated_delivery_time = Column(DateTime, nullable=True)
+    
     created_at = Column(DateTime, default=datetime.datetime.utcnow, nullable=False, index=True)
     updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow, nullable=False)
 
@@ -148,6 +162,7 @@ class Order(Base):
         Index('idx_order_patient_created', 'patient_id', 'created_at'),
         Index('idx_order_pharmacy_status', 'pharmacy_id', 'status'),
         Index('idx_order_payment_status', 'payment_status', 'status'),
+        Index('idx_order_delivery_location', 'delivery_lat', 'delivery_lon'),
     )
 
 
