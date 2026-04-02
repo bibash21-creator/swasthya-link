@@ -447,7 +447,7 @@ def search_pharmacies_advanced(
 @router.get("/me/profile")
 async def get_my_profile(
     db: Session = Depends(database.get_db),
-    current_user: models.Pharmacy = Depends(deps.get_current_pharmacy)
+    current_user: models.Pharmacy = Depends(deps.get_current_active_pharmacy)
 ):
     """Get current pharmacy's own profile."""
     return {
@@ -471,7 +471,7 @@ async def update_my_profile(
     latitude: Optional[float] = None,
     longitude: Optional[float] = None,
     db: Session = Depends(database.get_db),
-    current_user: models.Pharmacy = Depends(deps.get_current_pharmacy)
+    current_user: models.Pharmacy = Depends(deps.get_current_active_pharmacy)
 ):
     """Update current pharmacy's profile."""
     if name:
@@ -493,7 +493,7 @@ async def update_my_profile(
 @router.get("/me/inventory")
 async def get_my_inventory(
     db: Session = Depends(database.get_db),
-    current_user: models.Pharmacy = Depends(deps.get_current_pharmacy)
+    current_user: models.Pharmacy = Depends(deps.get_current_active_pharmacy)
 ):
     """Get current pharmacy's inventory."""
     items = db.query(models.PharmacyMedicine).filter(
@@ -510,7 +510,7 @@ async def add_inventory_item(
     price: Optional[float] = None,
     type: str = "medicine",
     db: Session = Depends(database.get_db),
-    current_user: models.Pharmacy = Depends(deps.get_current_pharmacy)
+    current_user: models.Pharmacy = Depends(deps.get_current_active_pharmacy)
 ):
     """Add new item to pharmacy's inventory."""
     item = models.PharmacyMedicine(
@@ -537,7 +537,7 @@ async def update_inventory_item(
     price: Optional[float] = None,
     is_available: Optional[int] = None,
     db: Session = Depends(database.get_db),
-    current_user: models.Pharmacy = Depends(deps.get_current_pharmacy)
+    current_user: models.Pharmacy = Depends(deps.get_current_active_pharmacy)
 ):
     """Update an inventory item."""
     item = db.query(models.PharmacyMedicine).filter(
@@ -569,7 +569,7 @@ async def update_inventory_item(
 async def delete_inventory_item(
     item_id: int,
     db: Session = Depends(database.get_db),
-    current_user: models.Pharmacy = Depends(deps.get_current_pharmacy)
+    current_user: models.Pharmacy = Depends(deps.get_current_active_pharmacy)
 ):
     """Delete an inventory item."""
     item = db.query(models.PharmacyMedicine).filter(
@@ -589,7 +589,7 @@ async def delete_inventory_item(
 async def get_my_orders(
     status: Optional[str] = None,
     db: Session = Depends(database.get_db),
-    current_user: models.Pharmacy = Depends(deps.get_current_pharmacy)
+    current_user: models.Pharmacy = Depends(deps.get_current_active_pharmacy)
 ):
     """Get orders for current pharmacy."""
     query = db.query(models.Order).filter(models.Order.pharmacy_id == current_user.id)
@@ -616,7 +616,7 @@ async def update_order_status(
     order_id: int,
     status: str,
     db: Session = Depends(database.get_db),
-    current_user: models.Pharmacy = Depends(deps.get_current_pharmacy)
+    current_user: models.Pharmacy = Depends(deps.get_current_active_pharmacy)
 ):
     """Update status of an order."""
     order = db.query(models.Order).filter(
