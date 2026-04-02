@@ -196,7 +196,7 @@ def assign_rider(
     order_id: int,
     rider_name: str,
     rider_phone: str,
-    estimated_time: datetime,
+    estimated_time: datetime.datetime,
     db: Session = Depends(database.get_db),
     current_pharmacy: models.Pharmacy = Depends(deps.get_current_active_pharmacy)
 ):
