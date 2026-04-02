@@ -133,30 +133,14 @@ app = FastAPI(
 # Setup exception handlers
 setup_exception_handlers(app)
 
-# CORS Configuration from environment
-allowed_origins = [origin.strip() for origin in settings.ALLOWED_ORIGINS.split(",") if origin.strip()]
-
-# Always include production frontend URL
-production_origins = [
-    "https://swasthyalink-teal.vercel.app",
-    "https://swasthyalink.vercel.app",
-]
-
-# Add production origins if not already present
-for origin in production_origins:
-    if origin not in allowed_origins:
-        allowed_origins.append(origin)
-
-if not allowed_origins:
-    allowed_origins = ["*"]
-    logger.warning("No ALLOWED_ORIGINS provided; enabling wildcard CORS for development")
-
-logger.info(f"Configured CORS origins: {allowed_origins}")
+# CORS - Allow all origins for now to fix issues
+allowed_origins = ["*"]
+logger.info("CORS: Allowing all origins for troubleshooting")
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
-    allow_credentials=True,
+    allow_credentials=False,  # Must be False when using ["*"]
     allow_methods=["*"],
     allow_headers=["*"],
     max_age=600,
