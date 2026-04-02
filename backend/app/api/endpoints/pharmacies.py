@@ -440,3 +440,193 @@ def search_pharmacies_advanced(
     except Exception as e:
         logger.error(f"Error in advanced search: {e}")
         raise HTTPException(status_code=500, detail=f"Search error: {str(e)}")
+
+
+# ==================== PHARMACY SELF-MANAGEMENT ====================
+
+@router.get("/me/profile")
+async def get_my_profile(
+    db: Session = Depends(database.get_db),
+    current_user: models.Pharmacy = Depends(deps.get_current_pharmacy)
+):
+    """Get current pharmacy's own profile."""
+    return {
+        "id": current_user.id,
+        "name": current_user.name,
+        "email": current_user.email,
+        "address": current_user.address,
+        "contact_number": current_user.contact_number,
+        "latitude": current_user.latitude,
+        "longitude": current_user.longitude,
+        "is_verified": current_user.is_verified,
+        "created_at": current_user.created_at
+    }
+
+
+@router.put("/me/profile")
+async def update_my_profile(
+    name: Optional[str] = None,
+    address: Optional[str] = None,
+    contact_number: Optional[str] = None,
+    latitude: Optional[float] = None,
+    longitude: Optional[float] = None,
+    db: Session = Depends(database.get_db),
+    current_user: models.Pharmacy = Depends(deps.get_current_pharmacy)
+):
+    """Update current pharmacy's profile."""
+    if name:
+        current_user.name = name
+    if address:
+        current_user.address = address
+    if contact_number:
+        current_user.contact_number = contact_number
+    if latitude is not None:
+        current_user.latitude = latitude
+    if longitude is not None:
+        current_user.longitude = longitude
+    
+    db.commit()
+    db.refresh(current_user)
+    return {"message": "Profile updated successfully", "pharmacy": current_user}
+
+
+@router.get("/me/inventory")
+async def get_my_inventory(
+    db: Session = Depends(database.get_db),
+    current_user: models.Pharmacy = Depends(deps.get_current_pharmacy)
+):
+    """Get current pharmacy's inventory."""
+    items = db.query(models.PharmacyMedicine).filter(
+        models.PharmacyMedicine.pharmacy_id == current_user.id
+    ).all()
+    return items
+
+
+@router.post("/me/inventory")
+async def add_inventory_item(
+    medicine_name: str,
+    description: Optional[str] = None,
+    quantity: int = 0,
+    price: Optional[float] = None,
+    type: str = "medicine",
+    db: Session = Depends(database.get_db),
+    current_user: models.Pharmacy = Depends(deps.get_current_pharmacy)
+):
+    """Add new item to pharmacy's inventory."""
+    item = models.PharmacyMedicine(
+        pharmacy_id=current_user.id,
+        medicine_name=medicine_name,
+        description=description,
+        quantity=quantity,
+        price=price,
+        type=type,
+        is_available=1 if quantity > 0 else 0
+    )
+    db.add(item)
+    db.commit()
+    db.refresh(item)
+    return {"message": "Item added successfully", "item": item}
+
+
+@router.put("/me/inventory/{item_id}")
+async def update_inventory_item(
+    item_id: int,
+    medicine_name: Optional[str] = None,
+    description: Optional[str] = None,
+    quantity: Optional[int] = None,
+    price: Optional[float] = None,
+    is_available: Optional[int] = None,
+    db: Session = Depends(database.get_db),
+    current_user: models.Pharmacy = Depends(deps.get_current_pharmacy)
+):
+    """Update an inventory item."""
+    item = db.query(models.PharmacyMedicine).filter(
+        models.PharmacyMedicine.id == item_id,
+        models.PharmacyMedicine.pharmacy_id == current_user.id
+    ).first()
+    
+    if not item:
+        raise HTTPException(status_code=404, detail="Item not found")
+    
+    if medicine_name:
+        item.medicine_name = medicine_name
+    if description is not None:
+        item.description = description
+    if quantity is not None:
+        item.quantity = quantity
+        item.is_available = 1 if quantity > 0 else 0
+    if price is not None:
+        item.price = price
+    if is_available is not None:
+        item.is_available = is_available
+    
+    db.commit()
+    db.refresh(item)
+    return {"message": "Item updated successfully", "item": item}
+
+
+@router.delete("/me/inventory/{item_id}")
+async def delete_inventory_item(
+    item_id: int,
+    db: Session = Depends(database.get_db),
+    current_user: models.Pharmacy = Depends(deps.get_current_pharmacy)
+):
+    """Delete an inventory item."""
+    item = db.query(models.PharmacyMedicine).filter(
+        models.PharmacyMedicine.id == item_id,
+        models.PharmacyMedicine.pharmacy_id == current_user.id
+    ).first()
+    
+    if not item:
+        raise HTTPException(status_code=404, detail="Item not found")
+    
+    db.delete(item)
+    db.commit()
+    return {"message": "Item deleted successfully"}
+
+
+@router.get("/me/orders")
+async def get_my_orders(
+    status: Optional[str] = None,
+    db: Session = Depends(database.get_db),
+    current_user: models.Pharmacy = Depends(deps.get_current_pharmacy)
+):
+    """Get orders for current pharmacy."""
+    query = db.query(models.Order).filter(models.Order.pharmacy_id == current_user.id)
+    if status:
+        query = query.filter(models.Order.status == status)
+    orders = query.all()
+    
+    result = []
+    for order in orders:
+        patient = db.query(models.Patient).filter(models.Patient.id == order.patient_id).first()
+        result.append({
+            "id": order.id,
+            "status": order.status,
+            "total_amount": order.total_amount,
+            "payment_status": order.payment_status,
+            "created_at": order.created_at,
+            "patient": {"id": patient.id, "name": patient.full_name} if patient else None
+        })
+    return result
+
+
+@router.put("/me/orders/{order_id}/status")
+async def update_order_status(
+    order_id: int,
+    status: str,
+    db: Session = Depends(database.get_db),
+    current_user: models.Pharmacy = Depends(deps.get_current_pharmacy)
+):
+    """Update status of an order."""
+    order = db.query(models.Order).filter(
+        models.Order.id == order_id,
+        models.Order.pharmacy_id == current_user.id
+    ).first()
+    
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+    
+    order.status = status
+    db.commit()
+    return {"message": "Order status updated", "order_id": order_id, "status": status}
