@@ -297,3 +297,146 @@ def get_all_reviews(db: Session = Depends(database.get_db)):
     except Exception as e:
         logger.error(f"Error fetching reviews: {e}")
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+
+
+@router.get("/search/advanced")
+def search_pharmacies_advanced(
+    lat: float,
+    lon: float,
+    medicine_name: Optional[str] = None,
+    radius_km: float = 10.0,
+    max_price: Optional[float] = None,
+    sort_by: str = "distance",  # distance, price, availability
+    db: Session = Depends(database.get_db)
+):
+    """
+    Advanced pharmacy search with multi-criteria matching:
+    - Distance: Find pharmacies within radius
+    - Medicine availability: Check if specific medicine is in stock
+    - Price comparison: Compare prices across pharmacies
+    """
+    try:
+        # Haversine formula for distance calculation
+        haversine = """
+            (6371 * acos(
+                cos(radians(:lat)) * cos(radians(p.latitude)) *
+                cos(radians(p.longitude) - radians(:lon)) +
+                sin(radians(:lat)) * sin(radians(p.latitude))
+            ))
+        """
+        
+        # Base query to get pharmacies within radius
+        base_query = text(f"""
+            SELECT p.*, {haversine} AS distance
+            FROM pharmacies p
+            WHERE {haversine} <= :radius
+            ORDER BY distance
+        """)
+        
+        pharmacies_result = db.execute(base_query, {
+            "lat": lat, "lon": lon, "radius": radius_km
+        }).mappings().all()
+        
+        results = []
+        
+        for pharmacy_row in pharmacies_result:
+            pharmacy = dict(pharmacy_row)
+            pharmacy_id = pharmacy['id']
+            
+            # Get inventory for this pharmacy
+            inventory_query = db.query(models.PharmacyMedicine).filter(
+                models.PharmacyMedicine.pharmacy_id == pharmacy_id
+            )
+            
+            # Filter by medicine name if provided
+            medicine_match = None
+            if medicine_name:
+                medicine_match = inventory_query.filter(
+                    models.PharmacyMedicine.medicine_name.ilike(f"%{medicine_name}%"),
+                    models.PharmacyMedicine.quantity > 0
+                ).first()
+                
+                # Skip if medicine not found and user specifically searching for it
+                if medicine_name and not medicine_match:
+                    continue
+            
+            # Get all available medicines for price comparison
+            available_medicines = inventory_query.filter(
+                models.PharmacyMedicine.quantity > 0
+            ).all()
+            
+            # Calculate availability score (percentage of medicines in stock)
+            total_medicines = db.query(models.PharmacyMedicine).filter(
+                models.PharmacyMedicine.pharmacy_id == pharmacy_id
+            ).count()
+            
+            in_stock_count = len(available_medicines)
+            availability_score = (in_stock_count / total_medicines * 100) if total_medicines > 0 else 0
+            
+            # Build result
+            result = {
+                "pharmacy": pharmacy,
+                "distance_km": round(pharmacy['distance'], 2),
+                "availability_score": round(availability_score, 1),
+                "total_medicines": total_medicines,
+                "in_stock_count": in_stock_count,
+                "contact": {
+                    "phone": pharmacy.get('contact_number', 'N/A'),
+                    "email": pharmacy.get('email', 'N/A'),
+                    "address": pharmacy.get('address', 'N/A')
+                }
+            }
+            
+            # Add specific medicine info if searched
+            if medicine_match:
+                result["searched_medicine"] = {
+                    "name": medicine_match.medicine_name,
+                    "price": medicine_match.price,
+                    "quantity_available": medicine_match.quantity,
+                    "in_stock": medicine_match.quantity > 0
+                }
+                
+                # Filter by max price if specified
+                if max_price and medicine_match.price and medicine_match.price > max_price:
+                    continue
+            
+            # Add price comparison data (top 5 cheapest medicines)
+            sorted_by_price = sorted(
+                available_medicines,
+                key=lambda x: x.price if x.price else float('inf')
+            )[:5]
+            
+            result["price_comparison"] = [
+                {
+                    "name": m.medicine_name,
+                    "price": m.price,
+                    "quantity": m.quantity
+                }
+                for m in sorted_by_price if m.price
+            ]
+            
+            results.append(result)
+        
+        # Sort results based on user preference
+        if sort_by == "price" and medicine_name:
+            results.sort(key=lambda x: x.get("searched_medicine", {}).get("price", float('inf')))
+        elif sort_by == "availability":
+            results.sort(key=lambda x: x["availability_score"], reverse=True)
+        # Default: sort by distance (already sorted)
+        
+        return {
+            "search_criteria": {
+                "latitude": lat,
+                "longitude": lon,
+                "radius_km": radius_km,
+                "medicine_name": medicine_name,
+                "max_price": max_price,
+                "sort_by": sort_by
+            },
+            "results_count": len(results),
+            "pharmacies": results
+        }
+        
+    except Exception as e:
+        logger.error(f"Error in advanced search: {e}")
+        raise HTTPException(status_code=500, detail=f"Search error: {str(e)}")

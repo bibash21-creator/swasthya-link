@@ -211,3 +211,25 @@ class Admin(Base):
     is_active = Column(Integer, default=1, nullable=False)
     created_at = Column(DateTime, default=datetime.datetime.utcnow, nullable=False)
     last_login = Column(DateTime, nullable=True)
+
+
+class ChatMessage(Base):
+    __tablename__ = "chat_messages"
+
+    id = Column(Integer, primary_key=True, index=True)
+    patient_id = Column(Integer, ForeignKey("patients.id", ondelete="CASCADE"), nullable=False, index=True)
+    pharmacy_id = Column(Integer, ForeignKey("pharmacies.id", ondelete="CASCADE"), nullable=False, index=True)
+    sender_type = Column(String(20), nullable=False, index=True)  # 'patient' or 'pharmacy'
+    message = Column(String(2000), nullable=False)
+    is_read = Column(Integer, default=0, nullable=False, index=True)  # 0 = unread, 1 = read
+    created_at = Column(DateTime, default=datetime.datetime.utcnow, nullable=False, index=True)
+
+    patient = relationship("Patient")
+    pharmacy = relationship("Pharmacy")
+
+    # Composite indexes for chat queries
+    __table_args__ = (
+        Index('idx_chat_patient_pharmacy', 'patient_id', 'pharmacy_id'),
+        Index('idx_chat_pharmacy_created', 'pharmacy_id', 'created_at'),
+        Index('idx_chat_unread', 'pharmacy_id', 'is_read'),
+    )
